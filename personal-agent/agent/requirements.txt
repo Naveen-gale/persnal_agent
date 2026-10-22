@@ -1,0 +1,12 @@
+langgraph
+langchain-openai
+python-dotenv
+google-api-python-client
+google-auth-oauthlib
+google-auth-httplib2
+pytest
+groq
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+keyring
