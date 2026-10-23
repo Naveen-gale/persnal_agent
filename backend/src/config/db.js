@@ -1,0 +1,50 @@
+import mongoose from 'mongoose';
+import { config } from './env.js';
+
+let isConnected = false;
+
+export async function connectDB() {
+  if (isConnected) {
+    return;
+  }
+
+  try {
+    const conn = await mongoose.connect(config.mongodbUri, {
+      dbName: config.mongodbDbName,
+      serverSelectionTimeoutMS: 15000,
+    });
+
+    isConnected = true;
+    console.log(`[MongoDB] Connected to database: ${conn.connection.name}`);
+
+    // Drop any legacy unique index (google_sub_1) that causes duplicate null errors for new users
+    try {
+      const userColl = conn.connection.collection('users');
+      const indexes = await userColl.indexes();
+      const hasGoogleSub = indexes.some((idx) => idx.name === 'google_sub_1');
+      if (hasGoogleSub) {
+        await userColl.dropIndex('google_sub_1');
+        console.log('[MongoDB] Cleaned up legacy index: google_sub_1');
+      }
+    } catch {
+      // Ignore if collection or index does not exist
+    }
+  } catch (error) {
+    console.error(`[MongoDB Connection Error] ${error.message}`);
+    // Do not crash immediately in dev mode so API can still report status
+    if (config.env === 'production') {
+      throw error;
+    }
+  }
+}
+
+export function isDbConnected() {
+  return mongoose.connection.readyState === 1;
+}
+
+export async function disconnectDB() {
+  if (isConnected) {
+    await mongoose.disconnect();
+    isConnected = false;
+  }
+}

@@ -13,6 +13,19 @@ workflow, Google service integration points, and tests.
 Google OAuth credentials and tokens are local-only and must not be committed.
 Google service tools and model connectivity are placeholders until configured.
 
+## Gmail search and summaries
+
+From the terminal agent, search read-only with Gmail query syntax, for example
+`search gmail: is:unread` or `find emails matching: subject:exam`. Search results
+include headers and Gmail snippets only, with at most 10 results in the agent
+workflow (the Gmail tool itself allows up to 20).
+
+Ask for an email summary with requests such as `Summarize my unread emails`,
+`Summarize emails about internships`, or `What important deadlines are
+mentioned in my emails?`. Summaries use only the bounded metadata and snippets
+returned by Gmail; they may not contain enough content to determine all details.
+The feature is read-only and does not change messages.
+
 ## Project layout
 
 - `main.py`: terminal entry point

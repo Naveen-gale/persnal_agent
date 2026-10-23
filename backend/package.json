@@ -1,0 +1,29 @@
+{
+  "name": "personal-ai-agent-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Backend API and authentication service for Personal AI Agent",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "bootstrap": "node src/scripts/bootstrapAdmin.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "keywords": ["ai", "agent", "langgraph", "groq", "gmail", "contacts"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.8.1",
+    "bcryptjs": "^3.0.2",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "google-auth-library": "^9.15.1",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.12.1"
+  }
+}

@@ -1,1 +1,28 @@
-/.venv
+# Python Virtual Environments & Caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Node.js
+node_modules/
+dist/
+build/
+.npm/
+
+# Environment and Secret Files
+.env
+*.env
+agent/.env
+backend/.env
+frontend/.env
+personal-agent/agent/.env
+credentials.json
+token.json
+*.token
+
+# Logs & OS metadata
+*.log
+.DS_Store
+Thumbs.db

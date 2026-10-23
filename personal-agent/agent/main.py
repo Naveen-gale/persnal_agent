@@ -1,5 +1,5 @@
 from graph import agent
-
+from tools.gmail import list_recent_emails, search_emails   
 
 def main():
     print("\n================================")
@@ -43,20 +43,6 @@ def main():
                 "Check your .env settings, internet connection, "
                 "Groq API key, and model availability.\n"
             )
-
-
-
-        result = agent.invoke({
-    "user_input": user_input,
-    "response": "",
-    "intent": "",
-    "conversation": conversation,
-})
-
-        conversation = result.get("conversation", conversation)
-
-        print(f"\nIntent: {result['intent']}")
-        print(f"Agent: {result['response']}\n")
 
 if __name__ == "__main__":
     main()
