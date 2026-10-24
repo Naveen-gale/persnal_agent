@@ -10,7 +10,11 @@ from googleapiclient.discovery import build
 
 SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly",
+    "https://www.googleapis.com/auth/gmail.send",
     "https://www.googleapis.com/auth/contacts",
+    "https://www.googleapis.com/auth/photospicker.mediaitems.readonly",
+    "https://www.googleapis.com/auth/drive.readonly",
+    "https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata",
 ]
 
 SERVICE_NAME = "PersonalAgent-Gmail"

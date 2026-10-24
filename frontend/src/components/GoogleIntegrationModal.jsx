@@ -113,6 +113,11 @@ export function GoogleIntegrationModal({ isOpen, onClose }) {
                       </li>
                     ))}
                   </ul>
+                  {(!googleStatus.scopes.some(s => s.includes('photospicker') || s.includes('photoslibrary') || s.includes('drive'))) && (
+                    <div style={{ marginTop: '8px', padding: '6px 10px', backgroundColor: 'rgba(234, 179, 8, 0.12)', border: '1px solid rgba(234, 179, 8, 0.3)', borderRadius: '6px', fontSize: '11px', color: '#fde047' }}>
+                      ⚠️ Google Photos permissions not granted on current token. Click <strong>"Re-authorize Google"</strong> below to enable ImageKit photo sync.
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -122,11 +127,11 @@ export function GoogleIntegrationModal({ isOpen, onClose }) {
         <div style={styles.infoCard}>
           <div style={styles.infoCardHeader}>
             <Lock size={16} color="#3b82f6" />
-            <span style={styles.infoTitle}>Zero-Repeat Login Architecture</span>
+            <span style={styles.infoTitle}>Gmail, Contacts & Google Photos (Stored on ImageKit)</span>
           </div>
           <p style={styles.infoText}>
-            When authorized, your OAuth refresh tokens are encrypted using <strong>AES-256-GCM</strong> and saved in your private MongoDB Atlas cluster.
-            You do <strong>not</strong> need to re-login to Google every time you open the agent or switch devices.
+            When connected, your agent can read/send Gmail, access Contacts, and <strong>automatically sync your Google Photos directly to your ImageKit CDN storage</strong>.
+            {isConnected && ' Click "Re-authorize Google" below to grant updated Photos and Gmail Send permissions.'}
           </p>
         </div>
 

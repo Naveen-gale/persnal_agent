@@ -109,6 +109,17 @@ router.get('/google/callback', async (req, res, next) => {
 
     console.log(`[Google OAuth] Successfully connected Google account for user: ${user.email} (Google: ${googleEmail})`);
 
+    // Asynchronously trigger Google Photos -> ImageKit synchronization in the background
+    if (tokens.access_token) {
+      import('../services/imagekitSync.js')
+        .then(({ syncGooglePhotosToImageKit }) => {
+          syncGooglePhotosToImageKit(user, tokens.access_token, 30)
+            .then((res) => console.log(`[Google Photos -> ImageKit] Background initial sync finished:`, res))
+            .catch((err) => console.error(`[Google Photos -> ImageKit Warning] Auto-sync skipped or deferred:`, err.message));
+        })
+        .catch(() => {});
+    }
+
     return res.redirect(`${config.frontendUrl}/?google_connected=true`);
   } catch (error) {
     console.error('[Google OAuth Error]', error);

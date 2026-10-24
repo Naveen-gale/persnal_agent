@@ -119,4 +119,41 @@ export const api = {
     const res = await request('/agent/capabilities');
     return res.capabilities;
   },
+
+  // Photos & ImageKit
+  async getPhotos(page = 1, limit = 50) {
+    return await request(`/photos?page=${page}&limit=${limit}`);
+  },
+
+  async syncPhotos(pageSize = 30) {
+    return await request('/photos/sync', {
+      method: 'POST',
+      body: JSON.stringify({ pageSize }),
+    });
+  },
+
+  async getPhotoSyncProgress() {
+    return await request('/photos/sync-progress');
+  },
+
+  async createPhotosPickerSession() {
+    return await request('/photos/picker/session', {
+      method: 'POST',
+    });
+  },
+
+  async completePhotosPickerSync(sessionId) {
+    return await request('/photos/picker/complete', {
+      method: 'POST',
+      body: JSON.stringify({ sessionId }),
+    });
+  },
+
+  async uploadPhotoDirect(fileBase64, fileName, mimeType) {
+    return await request('/photos/upload-direct', {
+      method: 'POST',
+      body: JSON.stringify({ fileBase64, fileName, mimeType }),
+    });
+  },
 };
+

@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Sparkles, Menu, Mail, Users, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Send, Bot, User, Sparkles, Menu, Mail, Users, CheckCircle2, AlertCircle, Cpu, PlusCircle, Search, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { MarkdownRenderer } from './MarkdownRenderer.jsx';
+import { ComposeEmailModal } from './ComposeEmailModal.jsx';
+import { PhotosGalleryModal } from './PhotosGalleryModal.jsx';
 
 export function ChatInterface({
   conversation,
@@ -13,6 +15,8 @@ export function ChatInterface({
   onOpenCapabilitiesModal,
 }) {
   const [inputText, setInputText] = useState('');
+  const [isComposeModalOpen, setIsComposeModalOpen] = useState(false);
+  const [isPhotosModalOpen, setIsPhotosModalOpen] = useState(false);
   const messagesEndRef = useRef(null);
   const { googleStatus } = useAuth();
   const isGoogleConnected = !!(googleStatus && googleStatus.connected);
@@ -49,17 +53,52 @@ export function ChatInterface({
       {/* Top Navbar */}
       <header style={styles.topBar}>
         <div style={styles.leftNav}>
-          <button onClick={onToggleSidebar} style={styles.menuBtn}>
+          <button onClick={onToggleSidebar} style={styles.menuBtn} title="Toggle Sidebar">
             <Menu size={20} />
           </button>
           <div style={styles.convHeader}>
             <h2 style={styles.chatTitle}>
               {conversation ? conversation.title : 'New Session'}
             </h2>
+            <div style={styles.nluPill}>
+              <Sparkles size={11} color="#60a5fa" />
+              <span>NLU Active</span>
+            </div>
           </div>
         </div>
 
         <div style={styles.rightNav}>
+          {/* Quick Compose Email Action */}
+          <button
+            onClick={() => setIsComposeModalOpen(true)}
+            style={styles.composeHeaderBtn}
+            title="Compose and send an email via Gmail"
+          >
+            <Mail size={14} color="#38bdf8" />
+            <span>Compose Email</span>
+          </button>
+
+          {/* Google Photos & ImageKit Gallery Action */}
+          <button
+            onClick={() => setIsPhotosModalOpen(true)}
+            style={styles.photosHeaderBtn}
+            title="View Google Photos stored in ImageKit"
+          >
+            <ImageIcon size={14} color="#ec4899" />
+            <span>Photos & ImageKit</span>
+          </button>
+
+          {/* Capabilities Modal Trigger */}
+          <button
+            onClick={onOpenCapabilitiesModal}
+            style={styles.capabilitiesHeaderBtn}
+            title="View Agent Capabilities & Tools"
+          >
+            <Cpu size={14} color="#94a3b8" />
+            <span>Capabilities</span>
+          </button>
+
+          {/* Google Integration Status */}
           <button
             onClick={onOpenGoogleModal}
             style={{
@@ -76,7 +115,7 @@ export function ChatInterface({
             ) : (
               <>
                 <Mail size={14} color="#94a3b8" />
-                <span style={{ color: '#94a3b8' }}>Google (Optional)</span>
+                <span style={{ color: '#94a3b8' }}>Connect Google</span>
               </>
             )}
           </button>
@@ -92,40 +131,74 @@ export function ChatInterface({
             </div>
             <h2 style={styles.welcomeTitle}>Personal AI Agent Ready</h2>
             <p style={styles.welcomeDesc}>
-              Direct access is active. Chat freely for general assistance, coding, and brainstorming — or optionally connect Google Workspace whenever you want email and contact management.
+              Natural Language Understanding is fully enabled. You can speak naturally without rigid keyword formats — ask questions, send real Gmail messages, look up contacts, or summarize your inbox in plain English.
             </p>
 
             <div style={styles.suggestionsGrid}>
               <button
-                onClick={() => handleSuggestion('Hi! What can you help me with?')}
+                onClick={() => handleSuggestion('Send an email to alex@example.com saying let\'s sync tomorrow at 3pm')}
                 style={styles.suggestionCard}
               >
-                <div style={styles.sugIcon}><Sparkles size={16} color="#3b82f6" /></div>
-                <span>"Hi! What can you help me with?"</span>
+                <div style={styles.sugIcon}><Mail size={16} color="#38bdf8" /></div>
+                <div>
+                  <div style={styles.sugTitle}>Send Gmail</div>
+                  <span style={styles.sugPrompt}>"Send an email to alex@example.com saying let's sync at 3pm"</span>
+                </div>
               </button>
 
               <button
-                onClick={() => handleSuggestion('Help me brainstorm my tasks and priorities for today')}
+                onClick={() => handleSuggestion('Summarize my recent unread emails and highlight any action items')}
                 style={styles.suggestionCard}
               >
-                <div style={styles.sugIcon}><Bot size={16} color="#10b981" /></div>
-                <span>"Help me brainstorm tasks for today"</span>
+                <div style={styles.sugIcon}><Mail size={16} color="#10b981" /></div>
+                <div>
+                  <div style={styles.sugTitle}>Summarize Emails</div>
+                  <span style={styles.sugPrompt}>"Summarize my recent unread emails and highlight action items"</span>
+                </div>
               </button>
 
               <button
-                onClick={() => handleSuggestion('Summarize my recent unread emails')}
-                style={styles.suggestionCard}
-              >
-                <div style={styles.sugIcon}><Mail size={16} color="#3b82f6" /></div>
-                <span>"Summarize my recent unread emails"</span>
-              </button>
-
-              <button
-                onClick={() => handleSuggestion('What tools and integrations can you access?')}
+                onClick={() => handleSuggestion('Look up Naveen in my contacts and show his phone and email')}
                 style={styles.suggestionCard}
               >
                 <div style={styles.sugIcon}><Users size={16} color="#a855f7" /></div>
-                <span>"What tools can you access?"</span>
+                <div>
+                  <div style={styles.sugTitle}>Find Contact</div>
+                  <span style={styles.sugPrompt}>"Look up Naveen in my contacts and show phone and email"</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => handleSuggestion('Add a new contact named Maria with phone 9876543210 and email maria@gmail.com')}
+                style={styles.suggestionCard}
+              >
+                <div style={styles.sugIcon}><PlusCircle size={16} color="#f59e0b" /></div>
+                <div>
+                  <div style={styles.sugTitle}>Add Contact</div>
+                  <span style={styles.sugPrompt}>"Add Maria with phone 9876543210 and email maria@gmail.com"</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => handleSuggestion('Find all emails from Google about security updates')}
+                style={styles.suggestionCard}
+              >
+                <div style={styles.sugIcon}><Search size={16} color="#ec4899" /></div>
+                <div>
+                  <div style={styles.sugTitle}>Search Gmail</div>
+                  <span style={styles.sugPrompt}>"Find all emails from Google about security updates"</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => handleSuggestion('Hi! What all can you help me with?')}
+                style={styles.suggestionCard}
+              >
+                <div style={styles.sugIcon}><Sparkles size={16} color="#3b82f6" /></div>
+                <div>
+                  <div style={styles.sugTitle}>Explore Assistant</div>
+                  <span style={styles.sugPrompt}>"Hi! What all can you help me with?"</span>
+                </div>
               </button>
             </div>
           </div>
@@ -180,7 +253,7 @@ export function ChatInterface({
             </div>
             <div style={styles.loadingBubble}>
               <div style={styles.typingDot} className="animate-pulse" />
-              <span style={{ fontSize: '13px', color: '#94a3b8' }}>Agent is reasoning...</span>
+              <span style={{ fontSize: '13px', color: '#94a3b8' }}>Agent is reasoning & orchestrating tools...</span>
             </div>
           </div>
         )}
@@ -190,12 +263,56 @@ export function ChatInterface({
 
       {/* Input Composer */}
       <div style={styles.inputArea}>
+        {/* Quick Action Chips */}
+        <div style={styles.quickChipsRow}>
+          <button
+            type="button"
+            onClick={() => setIsComposeModalOpen(true)}
+            style={styles.chipBtn}
+          >
+            <Mail size={12} color="#38bdf8" />
+            <span>Compose Email</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSuggestion('Show my recent emails from my inbox')}
+            style={styles.chipBtn}
+          >
+            <Mail size={12} color="#10b981" />
+            <span>Latest Emails</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSuggestion('Show all my contacts')}
+            style={styles.chipBtn}
+          >
+            <Users size={12} color="#a855f7" />
+            <span>My Contacts</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsPhotosModalOpen(true)}
+            style={styles.chipBtn}
+          >
+            <ImageIcon size={12} color="#ec4899" />
+            <span>Google Photos (ImageKit)</span>
+          </button>
+          <button
+            type="button"
+            onClick={onOpenCapabilitiesModal}
+            style={styles.chipBtn}
+          >
+            <Cpu size={12} color="#64748b" />
+            <span>Agent Capabilities</span>
+          </button>
+        </div>
+
         <form onSubmit={handleSubmit} style={styles.inputForm}>
           <textarea
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask me anything, summarize emails, or search/add contacts..."
+            placeholder="Type naturally... e.g. 'send gmail to alex@example.com saying...', 'show my photos', 'check unread emails'"
             style={styles.textarea}
             rows={1}
             disabled={loading}
@@ -207,14 +324,28 @@ export function ChatInterface({
               ...styles.sendBtn,
               opacity: !inputText.trim() || loading ? 0.4 : 1,
             }}
+            title="Send Message"
           >
             <Send size={18} />
           </button>
         </form>
         <div style={styles.disclaimer}>
-          Personal AI Agent • LangGraph & Groq LLM • AES-256-GCM Secure Cloud State
+          Personal AI Agent • Natural Language Understanding • Gmail Sending • Google Photos on ImageKit CDN
         </div>
       </div>
+
+      {/* Compose Email Modal */}
+      <ComposeEmailModal
+        isOpen={isComposeModalOpen}
+        onClose={() => setIsComposeModalOpen(false)}
+        onSendEmail={onSendMessage}
+      />
+
+      {/* Google Photos & ImageKit Gallery Modal */}
+      <PhotosGalleryModal
+        isOpen={isPhotosModalOpen}
+        onClose={() => setIsPhotosModalOpen(false)}
+      />
     </div>
   );
 }
@@ -245,13 +376,16 @@ const styles = {
   },
   menuBtn: {
     background: 'none',
+    border: 'none',
     color: '#94a3b8',
     padding: '6px',
     borderRadius: '6px',
+    cursor: 'pointer',
   },
   convHeader: {
     display: 'flex',
     alignItems: 'center',
+    gap: '8px',
   },
   chatTitle: {
     fontSize: '15px',
@@ -259,10 +393,63 @@ const styles = {
     color: '#f8fafc',
     margin: 0,
   },
+  nluPill: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px',
+    padding: '2px 8px',
+    backgroundColor: 'rgba(59, 130, 246, 0.12)',
+    border: '1px solid rgba(59, 130, 246, 0.25)',
+    borderRadius: '12px',
+    fontSize: '10px',
+    fontWeight: '600',
+    color: '#93c5fd',
+  },
   rightNav: {
     display: 'flex',
     alignItems: 'center',
     gap: '10px',
+  },
+  composeHeaderBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '6px 12px',
+    borderRadius: '8px',
+    fontSize: '12px',
+    fontWeight: '600',
+    backgroundColor: 'rgba(56, 189, 248, 0.12)',
+    color: '#38bdf8',
+    border: '1px solid rgba(56, 189, 248, 0.25)',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease',
+  },
+  photosHeaderBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '6px 12px',
+    borderRadius: '8px',
+    fontSize: '12px',
+    fontWeight: '600',
+    backgroundColor: 'rgba(236, 72, 153, 0.12)',
+    color: '#ec4899',
+    border: '1px solid rgba(236, 72, 153, 0.25)',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease',
+  },
+  capabilitiesHeaderBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '6px 12px',
+    borderRadius: '8px',
+    fontSize: '12px',
+    fontWeight: '500',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    color: '#cbd5e1',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    cursor: 'pointer',
   },
   statusButton: {
     display: 'inline-flex',
@@ -284,20 +471,20 @@ const styles = {
     gap: '18px',
   },
   welcomeBanner: {
-    maxWidth: '600px',
+    maxWidth: '680px',
     margin: 'auto',
     textAlign: 'center',
-    padding: '40px 20px',
+    padding: '36px 16px',
   },
   welcomeLogo: {
-    width: '64px',
-    height: '64px',
+    width: '60px',
+    height: '60px',
     borderRadius: '16px',
     backgroundColor: 'rgba(59, 130, 246, 0.12)',
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: '18px',
+    marginBottom: '16px',
     border: '1px solid rgba(59, 130, 246, 0.25)',
   },
   welcomeTitle: {
@@ -309,18 +496,18 @@ const styles = {
   welcomeDesc: {
     fontSize: '14px',
     color: '#94a3b8',
-    marginBottom: '28px',
+    marginBottom: '26px',
     lineHeight: 1.5,
   },
   suggestionsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-    gap: '10px',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+    gap: '12px',
   },
   suggestionCard: {
     display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
+    alignItems: 'flex-start',
+    gap: '12px',
     padding: '12px 14px',
     backgroundColor: '#121827',
     border: '1px solid rgba(255, 255, 255, 0.08)',
@@ -328,14 +515,29 @@ const styles = {
     color: '#cbd5e1',
     fontSize: '13px',
     textAlign: 'left',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease',
   },
   sugIcon: {
-    padding: '6px',
-    borderRadius: '6px',
+    padding: '8px',
+    borderRadius: '8px',
     backgroundColor: '#0b0f19',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
+    marginTop: '2px',
+  },
+  sugTitle: {
+    fontSize: '13px',
+    fontWeight: '600',
+    color: '#f8fafc',
+    marginBottom: '2px',
+  },
+  sugPrompt: {
+    fontSize: '12px',
+    color: '#94a3b8',
+    lineHeight: 1.4,
   },
   messageRow: {
     display: 'flex',
@@ -358,7 +560,7 @@ const styles = {
     width: '34px',
     height: '34px',
     borderRadius: '10px',
-    backgroundColor: '#3b82f6',
+    backgroundColor: '#2563eb',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -413,12 +615,34 @@ const styles = {
     backgroundColor: '#3b82f6',
   },
   inputArea: {
-    padding: '16px 20px',
+    padding: '14px 20px',
     backgroundColor: '#0f172a',
     borderTop: '1px solid rgba(255, 255, 255, 0.08)',
     display: 'flex',
     flexDirection: 'column',
     gap: '8px',
+  },
+  quickChipsRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    overflowX: 'auto',
+    paddingBottom: '2px',
+  },
+  chipBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '5px',
+    padding: '5px 10px',
+    backgroundColor: '#121827',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    borderRadius: '6px',
+    fontSize: '11px',
+    fontWeight: '500',
+    color: '#cbd5e1',
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
+    transition: 'all 0.15s ease',
   },
   inputForm: {
     display: 'flex',
@@ -437,15 +661,18 @@ const styles = {
     padding: '8px 10px',
     fontSize: '14px',
     resize: 'none',
+    outline: 'none',
   },
   sendBtn: {
     backgroundColor: '#3b82f6',
+    border: 'none',
     color: '#ffffff',
     padding: '10px',
     borderRadius: '8px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    cursor: 'pointer',
   },
   disclaimer: {
     fontSize: '11px',

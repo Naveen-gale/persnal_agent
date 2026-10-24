@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api/client.js';
-import { Cpu, X, CheckCircle, Mail, Users, Shield, Zap, Sparkles } from 'lucide-react';
+import { Cpu, X, CheckCircle, Mail, Users, Shield, Zap, Sparkles, Image } from 'lucide-react';
 
 export function CapabilitiesModal({ isOpen, onClose }) {
   const [capabilities, setCapabilities] = useState(null);
@@ -56,9 +56,21 @@ export function CapabilitiesModal({ isOpen, onClose }) {
             <div style={styles.section}>
               <h3 style={styles.sectionTitle}>
                 <Mail size={16} color="#3b82f6" />
-                Gmail Integration Tools
+                Gmail Integration & Email Sending Tools
               </h3>
               <div style={styles.toolList}>
+                <div style={styles.toolItem}>
+                  <CheckCircle size={15} color="#10b981" />
+                  <div>
+                    <strong>send_email:</strong> Compose and dispatch real emails directly via Gmail API to any recipient address.
+                  </div>
+                </div>
+                <div style={styles.toolItem}>
+                  <CheckCircle size={15} color="#10b981" />
+                  <div>
+                    <strong>natural_language_understanding:</strong> Understand casual conversational prompts, typos, and everyday instructions without rigid keyword prefixes.
+                  </div>
+                </div>
                 <div style={styles.toolItem}>
                   <CheckCircle size={15} color="#10b981" />
                   <div>
@@ -102,6 +114,27 @@ export function CapabilitiesModal({ isOpen, onClose }) {
                   <CheckCircle size={15} color="#10b981" />
                   <div>
                     <strong>add_contact:</strong> Create and save new contacts directly to your Google account.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style={styles.section}>
+              <h3 style={styles.sectionTitle}>
+                <Image size={16} color="#ec4899" />
+                Google Photos & ImageKit CDN
+              </h3>
+              <div style={styles.toolList}>
+                <div style={styles.toolItem}>
+                  <CheckCircle size={15} color="#10b981" />
+                  <div>
+                    <strong>auto_sync_to_imagekit:</strong> When connecting Google, all user photos are automatically uploaded to your private ImageKit CDN.
+                  </div>
+                </div>
+                <div style={styles.toolItem}>
+                  <CheckCircle size={15} color="#10b981" />
+                  <div>
+                    <strong>list_photos:</strong> Browse, preview, and share high-speed CDN photo URLs directly with the AI agent.
                   </div>
                 </div>
               </div>

@@ -128,10 +128,12 @@ def get_capabilities() -> dict[str, Any]:
         "model": os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"),
         "capabilities": {
             "general_chat": True,
+            "natural_language_understanding": True,
             "gmail": {
                 "read_inbox": True,
                 "search": True,
                 "summarize": True,
+                "send": True,
             },
             "contacts": {
                 "list": True,
@@ -140,7 +142,10 @@ def get_capabilities() -> dict[str, Any]:
             },
             "reminders": False,
             "tasks": False,
-            "photos": False,
+            "photos": {
+                "sync_to_imagekit": True,
+                "list": True,
+            },
         },
     }
 

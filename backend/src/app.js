@@ -10,6 +10,7 @@ import authRoutes from './routes/authRoutes.js';
 import integrationRoutes from './routes/integrationRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 import agentRoutes from './routes/agentRoutes.js';
+import photoRoutes from './routes/photoRoutes.js';
 
 validateConfig();
 
@@ -49,8 +50,8 @@ app.use(
 );
 
 // Request body parsers
-app.use(express.json({ limit: '2mb' }));
-app.use(express.urlencoded({ extended: true, limit: '2mb' }));
+app.use(express.json({ limit: '25mb' }));
+app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 app.use(cookieParser());
 
 // Rate limit general API requests
@@ -63,6 +64,7 @@ app.use('/api/v1/chat', chatRoutes);
 app.use('/api/v1', chatRoutes);
 app.use('/api/v1/agent', agentRoutes);
 app.use('/api/v1', agentRoutes);
+app.use('/api/v1/photos', photoRoutes);
 
 // Root health & info ping
 app.get('/', (req, res) => {

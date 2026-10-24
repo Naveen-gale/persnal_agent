@@ -39,6 +39,11 @@ export const config = {
   bootstrapAdminEmail: process.env.BOOTSTRAP_ADMIN_EMAIL || '',
   bootstrapAdminPassword: process.env.BOOTSTRAP_ADMIN_PASSWORD || '',
 
+  // ImageKit Configuration
+  imagekitPublicKey: process.env.IMAGEKIT_PUBLIC_KEY || '',
+  imagekitPrivateKey: process.env.IMAGEKIT_PRIVATE_KEY || '',
+  imagekitUrlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT || '',
+
   logLevel: process.env.LOG_LEVEL || 'info',
 };
 

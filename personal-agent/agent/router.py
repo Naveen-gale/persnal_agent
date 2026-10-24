@@ -62,6 +62,65 @@ def is_email_read_request(message: str) -> bool:
     )
 
 
+def is_email_send_request(message: str) -> bool:
+    """Detect if the message is asking to compose or send an email."""
+    text = message.lower().strip()
+    send_phrases = (
+        "send gmail", "send email", "send an email", "send a mail", "send mail",
+        "email to", "send to", "compose email", "compose gmail", "shoot an email", "mail to"
+    )
+    if any(phrase in text for phrase in send_phrases):
+        return True
+    if "@" in text and any(w in text for w in ("send", "email", "mail")):
+        return True
+    return False
+
+
+def parse_email_send_command(message: str) -> dict:
+    """Extract recipient email, subject, and body from command or natural phrasing."""
+    text = message.strip()
+
+    # 1. Pipe format: 'send email: to@test.com | Subject | Body'
+    if "|" in text and ("send" in text.lower() or "mail" in text.lower()):
+        cleaned = re.sub(
+            r"^(?:send\s+)?(?:gmail|email|mail)?\s*[:\s]*",
+            "",
+            text,
+            flags=re.IGNORECASE,
+        ).strip()
+        parts = [p.strip() for p in cleaned.split("|")]
+        if parts and parts[0]:
+            return {
+                "to": parts[0],
+                "subject": parts[1] if len(parts) > 1 else "",
+                "body": parts[2] if len(parts) > 2 else "",
+            }
+
+    # 2. Extract recipient email via regex
+    email_match = re.search(r"\b([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)\b", text)
+    to_email = email_match.group(1).strip() if email_match else ""
+
+    # 3. Subject extraction if explicitly written
+    subject = ""
+    subj_match = re.search(r"(?:subject|subj)(?:\s+is)?\s*[:]\s*([^|,\n]+)", text, re.IGNORECASE)
+    if not subj_match:
+        subj_match = re.search(r"with\s+subject\s+([\"'][^\"']+[\"']|[a-zA-Z0-9\s]+?)(?=\s+(?:and|message|body|saying)|\s*$)", text, re.IGNORECASE)
+    if subj_match:
+        subject = subj_match.group(1).strip().strip("'\"")
+
+    # 4. Body extraction
+    body = ""
+    body_match = re.search(r"(?:body|message|saying|text)\s*[:]?\s*(.+)$", text, re.IGNORECASE)
+    if body_match:
+        body = body_match.group(1).strip()
+
+    return {
+        "to": to_email,
+        "subject": subject,
+        "body": body,
+    }
+
+
 def is_email_search_request(message: str) -> bool:
     text = message.lower().strip()
     return (
