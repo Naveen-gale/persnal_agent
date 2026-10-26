@@ -1,49 +1,46 @@
-"""Tests for the agent FastAPI server."""
+"""Tests for the agent FastAPI server endpoints and security."""
 
-from unittest.mock import patch
-from fastapi.testclient import TestClient
+import os
+from unittest.mock import MagicMock, patch
+import pytest
+from fastapi import HTTPException
 import server
+from server import InvokeRequest
 
 
 def test_health_endpoint() -> None:
-    client = TestClient(server.app)
-    res = client.get("/health")
-    assert res.status_code == 200
-    assert res.json()["status"] == "ok"
+    res = server.health_check()
+    assert res["status"] == "ok"
+    assert res["service"] == "personal-ai-agent"
 
 
 def test_capabilities_endpoint() -> None:
-    client = TestClient(server.app)
-    res = client.get("/capabilities")
-    assert res.status_code == 200
-    data = res.json()
+    data = server.get_capabilities()
     assert data["status"] == "ok"
     assert "capabilities" in data
     assert data["capabilities"]["general_chat"] is True
     assert data["capabilities"]["gmail"]["read_inbox"] is True
     assert data["capabilities"]["contacts"]["add"] is True
+    assert data["capabilities"]["photos"]["sync_to_imagekit"] is True
 
 
 def test_invoke_requires_secret_when_configured() -> None:
-    client = TestClient(server.app)
-    with patch.object(server, "AGENT_SERVICE_SECRET", "super_secret_key"):
-        # Without header
-        res = client.post("/invoke", json={"user_input": "hello"})
-        assert res.status_code == 401
+    with patch.dict(os.environ, {"RENDER": "true"}), patch.object(server, "AGENT_SERVICE_SECRET", "super_secret_key"):
+        # Without header should raise 401
+        with pytest.raises(HTTPException) as exc_info:
+            server._verify_secret(None, None)
+        assert exc_info.value.status_code == 401
 
-        # With wrong header
-        res = client.post("/invoke", json={"user_input": "hello"}, headers={"X-Agent-Secret": "wrong"})
-        assert res.status_code == 401
+        # With wrong header should raise 401
+        with pytest.raises(HTTPException) as exc_info:
+            server._verify_secret("wrong", None)
+        assert exc_info.value.status_code == 401
 
-        # With correct header
-        with patch.object(server.agent, "invoke", return_value={"response": "Hi", "intent": "general", "conversation": []}):
-            res = client.post("/invoke", json={"user_input": "hello"}, headers={"X-Agent-Secret": "super_secret_key"})
-            assert res.status_code == 200
-            assert res.json()["response"] == "Hi"
+        # With correct header should pass
+        server._verify_secret("super_secret_key", None)
 
 
 def test_invoke_sets_and_cleans_context_tokens() -> None:
-    client = TestClient(server.app)
     captured_tokens = []
 
     def mock_invoke(state):
@@ -51,10 +48,15 @@ def test_invoke_sets_and_cleans_context_tokens() -> None:
         captured_tokens.append(get_current_context_tokens())
         return {"response": "Mocked", "intent": "general", "conversation": []}
 
-    with patch.object(server, "AGENT_SERVICE_SECRET", ""), patch.object(server.agent, "invoke", side_effect=mock_invoke):
+    mock_agent = MagicMock()
+    mock_agent.invoke.side_effect = mock_invoke
+
+    with patch.object(server, "AGENT_SERVICE_SECRET", ""), patch.object(server, "agent", mock_agent):
         dummy_tokens = {"access_token": "token_abc", "refresh_token": "refresh_xyz"}
-        res = client.post("/invoke", json={"user_input": "check inbox", "google_tokens": dummy_tokens})
-        assert res.status_code == 200
+        req = InvokeRequest(user_input="check inbox", google_tokens=dummy_tokens)
+        res = server.invoke_agent(req=req, request=None, x_agent_secret=None)
+
+        assert res.response == "Mocked"
         assert len(captured_tokens) == 1
         assert captured_tokens[0]["access_token"] == "token_abc"
 

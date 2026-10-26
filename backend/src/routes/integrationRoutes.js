@@ -3,8 +3,9 @@ import jwt from 'jsonwebtoken';
 import { requireAuth } from '../middleware/auth.js';
 import { config } from '../config/env.js';
 import { User } from '../models/User.js';
+import { SyncJob } from '../models/SyncJob.js';
 import { getAuthorizationUrl, exchangeCodeForTokens } from '../services/googleOAuth.js';
-import { encryptTokens } from '../services/tokenEncryption.js';
+import { encryptTokens, decryptTokens } from '../services/tokenEncryption.js';
 
 const router = express.Router();
 
@@ -109,15 +110,57 @@ router.get('/google/callback', async (req, res, next) => {
 
     console.log(`[Google OAuth] Successfully connected Google account for user: ${user.email} (Google: ${googleEmail})`);
 
-    // Asynchronously trigger Google Photos -> ImageKit synchronization in the background
+    // ─── Fire-and-forget durable background sync ───
+    // Create a persistent SyncJob so progress survives browser close.
+    // Then launch sequential chunked sync that never crashes free-tier Render.
     if (tokens.access_token) {
-      import('../services/imagekitSync.js')
-        .then(({ syncGooglePhotosToImageKit }) => {
-          syncGooglePhotosToImageKit(user, tokens.access_token, 30)
-            .then((res) => console.log(`[Google Photos -> ImageKit] Background initial sync finished:`, res))
-            .catch((err) => console.error(`[Google Photos -> ImageKit Warning] Auto-sync skipped or deferred:`, err.message));
-        })
-        .catch(() => {});
+      setImmediate(async () => {
+        try {
+          // Create SyncJob document
+          const { SyncJob: SJ } = await import('../models/SyncJob.js');
+          const syncJob = new SJ({
+            userId: user._id,
+            userEmail: googleEmail || user.email,
+            status: 'pending',
+            message: 'Preparing background sync…',
+          });
+          await syncJob.save();
+
+          // Run data sync (Contacts → Gmail → Drive) SEQUENTIALLY with batch delays
+          const { syncAllGoogleDataToMongoDB } = await import('../services/googleDataSync.js');
+          await syncAllGoogleDataToMongoDB(user, tokens.access_token, googleEmail, syncJob);
+
+          // Run photo sync AFTER data sync (heaviest I/O — downloads + uploads)
+          try {
+            syncJob.photos.status = 'syncing';
+            syncJob.message = 'Syncing Google Photos to ImageKit CDN…';
+            await syncJob.save();
+
+            const { syncGooglePhotosToImageKit } = await import('../services/imagekitSync.js');
+            const photoResult = await syncGooglePhotosToImageKit(user, tokens.access_token, 500);
+
+            syncJob.photos.status = 'done';
+            syncJob.photos.synced = photoResult?.synced || 0;
+            syncJob.photos.total = photoResult?.total || 0;
+          } catch (photoErr) {
+            console.error(`[Photo Sync Warning]`, photoErr.message);
+            syncJob.photos.status = 'error';
+            syncJob.photos.error = photoErr.message;
+          }
+
+          // Final save
+          if (syncJob.status !== 'error') {
+            syncJob.status = syncJob.photos.status === 'error' ? 'partial' : (syncJob.status === 'partial' ? 'partial' : 'completed');
+          }
+          syncJob.completedAt = new Date();
+          syncJob.message = `Sync finished. Contacts: ${syncJob.contacts.synced}, Emails: ${syncJob.gmail.synced}, Drive: ${syncJob.drive.synced}, Photos: ${syncJob.photos.synced}`;
+          await syncJob.save();
+
+          console.log(`[Background Sync] ✔ All done for ${user.email}`);
+        } catch (bgErr) {
+          console.error(`[Background Sync Fatal]`, bgErr.message);
+        }
+      });
     }
 
     return res.redirect(`${config.frontendUrl}/?google_connected=true`);
@@ -126,6 +169,98 @@ router.get('/google/callback', async (req, res, next) => {
     return res.redirect(
       `${config.frontendUrl}/?google_error=${encodeURIComponent(`Google authorization failed: ${error.message}`)}`
     );
+  }
+});
+
+/**
+ * GET /api/v1/integrations/google/sync-status
+ * Return the latest background SyncJob progress for the authenticated user.
+ * Frontend can poll this to show real-time sync status.
+ */
+router.get('/google/sync-status', requireAuth, async (req, res, next) => {
+  try {
+    const job = await SyncJob.findOne({ userId: req.user._id })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    if (!job) {
+      return res.json({ syncJob: null, message: 'No sync has been started yet.' });
+    }
+
+    return res.json({ syncJob: job });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /api/v1/integrations/google/resync
+ * Manually trigger a fresh background sync for the authenticated user.
+ */
+router.post('/google/resync', requireAuth, async (req, res, next) => {
+  try {
+    if (!req.user.googleIntegration || !req.user.googleIntegration.connected) {
+      return res.status(400).json({ error: 'Google account is not connected.' });
+    }
+
+    const tokens = decryptTokens(req.user.googleIntegration, config.tokenEncryptionKey);
+    const accessToken = tokens?.access_token || tokens?.token;
+    if (!accessToken) {
+      return res.status(400).json({ error: 'No active Google OAuth token. Please re-authorize.' });
+    }
+
+    // Check if a sync is already running
+    const existing = await SyncJob.findOne({ userId: req.user._id, status: 'syncing' });
+    if (existing) {
+      return res.json({ message: 'A sync is already in progress.', syncJob: existing });
+    }
+
+    const googleEmail = req.user.googleIntegration.email || req.user.email;
+
+    // Create new SyncJob and launch in background
+    const syncJob = new SyncJob({
+      userId: req.user._id,
+      userEmail: googleEmail,
+      status: 'pending',
+      message: 'Manual resync queued…',
+    });
+    await syncJob.save();
+
+    setImmediate(async () => {
+      try {
+        const { syncAllGoogleDataToMongoDB } = await import('../services/googleDataSync.js');
+        await syncAllGoogleDataToMongoDB(req.user, accessToken, googleEmail, syncJob);
+
+        try {
+          syncJob.photos.status = 'syncing';
+          syncJob.message = 'Syncing Google Photos to ImageKit CDN…';
+          await syncJob.save();
+
+          const { syncGooglePhotosToImageKit } = await import('../services/imagekitSync.js');
+          const photoResult = await syncGooglePhotosToImageKit(req.user, accessToken, 500);
+          syncJob.photos.status = 'done';
+          syncJob.photos.synced = photoResult?.synced || 0;
+          syncJob.photos.total = photoResult?.total || 0;
+        } catch (photoErr) {
+          syncJob.photos.status = 'error';
+          syncJob.photos.error = photoErr.message;
+        }
+
+        syncJob.status = syncJob.photos.status === 'error' ? 'partial' : (syncJob.status === 'partial' ? 'partial' : 'completed');
+        syncJob.completedAt = new Date();
+        syncJob.message = `Resync finished. Contacts: ${syncJob.contacts.synced}, Emails: ${syncJob.gmail.synced}, Drive: ${syncJob.drive.synced}, Photos: ${syncJob.photos.synced}`;
+        await syncJob.save();
+      } catch (err) {
+        console.error(`[Manual Resync Error]`, err.message);
+      }
+    });
+
+    return res.status(202).json({
+      message: 'Background resync started.',
+      syncJob,
+    });
+  } catch (error) {
+    next(error);
   }
 });
 

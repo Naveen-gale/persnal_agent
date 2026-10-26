@@ -27,6 +27,12 @@ CLIENT_FILE = AGENT_DIR / "credentials.json"
 _context_google_tokens: contextvars.ContextVar[dict | None] = contextvars.ContextVar(
     "_context_google_tokens", default=None
 )
+_context_synced_photos: contextvars.ContextVar[list[dict] | None] = contextvars.ContextVar(
+    "_context_synced_photos", default=None
+)
+_context_synced_contacts: contextvars.ContextVar[list[dict] | None] = contextvars.ContextVar(
+    "_context_synced_contacts", default=None
+)
 
 
 def set_context_tokens(tokens: dict | None) -> contextvars.Token:
@@ -42,6 +48,31 @@ def reset_context_tokens(token: contextvars.Token) -> None:
 def get_current_context_tokens() -> dict | None:
     """Return the active per-request tokens if any."""
     return _context_google_tokens.get()
+
+
+def set_context_synced_data(
+    photos: list[dict] | None = None, contacts: list[dict] | None = None
+) -> tuple[contextvars.Token, contextvars.Token]:
+    """Set per-request synced photos and contacts context."""
+    tok_p = _context_synced_photos.set(photos)
+    tok_c = _context_synced_contacts.set(contacts)
+    return tok_p, tok_c
+
+
+def reset_context_synced_data(tokens: tuple[contextvars.Token, contextvars.Token]) -> None:
+    """Reset synced data context tokens."""
+    _context_synced_photos.reset(tokens[0])
+    _context_synced_contacts.reset(tokens[1])
+
+
+def get_current_synced_photos() -> list[dict] | None:
+    """Return user's synced photos from ImageKit CDN in request context."""
+    return _context_synced_photos.get()
+
+
+def get_current_synced_contacts() -> list[dict] | None:
+    """Return user's synced contacts from MongoDB in request context."""
+    return _context_synced_contacts.get()
 
 
 def save_credentials(creds: Credentials) -> None:

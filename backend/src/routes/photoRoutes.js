@@ -87,7 +87,7 @@ router.post('/sync', async (req, res, next) => {
       });
     }
 
-    const pageSize = parseInt(req.body.pageSize || '30', 10);
+    const pageSize = parseInt(req.body.pageSize || '500', 10);
 
     // Initial state
     updateSyncProgress(req.user._id, {

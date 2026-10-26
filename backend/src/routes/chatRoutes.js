@@ -2,6 +2,8 @@ import express from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import { Conversation } from '../models/Conversation.js';
 import { Message } from '../models/Message.js';
+import { Photo } from '../models/Photo.js';
+import { Contact } from '../models/Contact.js';
 import { decryptTokens, encryptTokens } from '../services/tokenEncryption.js';
 import { invokeAgent } from '../services/agentClient.js';
 import { config } from '../config/env.js';
@@ -184,11 +186,19 @@ router.post(['/chat', '/'], async (req, res, next) => {
     });
     await userMsg.save();
 
-    // 5. Invoke the Python LangGraph Agent service
+    // 5. Retrieve user's synced ImageKit photos and contacts from MongoDB
+    const [syncedPhotos, syncedContacts] = await Promise.all([
+      Photo.find({ userId: req.user._id }).sort({ creationTime: -1, syncedAt: -1 }).limit(50).lean(),
+      Contact.find({ userId: req.user._id }).sort({ name: 1 }).limit(100).lean(),
+    ]);
+
+    // 6. Invoke the Python LangGraph Agent service
     const agentResult = await invokeAgent({
       userInput: trimmedMessage,
       conversation: contextConversation,
       googleTokens: decryptedGoogleTokens,
+      syncedPhotos,
+      syncedContacts,
     });
 
     // 6. If tokens were refreshed by the agent, re-encrypt and update in MongoDB

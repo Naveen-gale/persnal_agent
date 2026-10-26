@@ -15,9 +15,17 @@ const client = axios.create({
  * @param {string} params.userInput
  * @param {Array} params.conversation
  * @param {object|null} params.googleTokens
+ * @param {Array} [params.syncedPhotos]
+ * @param {Array} [params.syncedContacts]
  * @returns {Promise<{ response: string, intent: string, conversation: Array, googleTokens: object|null }>}
  */
-export async function invokeAgent({ userInput, conversation = [], googleTokens = null }) {
+export async function invokeAgent({
+  userInput,
+  conversation = [],
+  googleTokens = null,
+  syncedPhotos = [],
+  syncedContacts = [],
+}) {
   const headers = {};
   if (config.agentServiceSecret) {
     headers['X-Agent-Secret'] = config.agentServiceSecret;
@@ -27,6 +35,20 @@ export async function invokeAgent({ userInput, conversation = [], googleTokens =
     user_input: userInput,
     conversation: conversation.slice(-20), // bound context window
     google_tokens: googleTokens,
+    synced_photos: (syncedPhotos || []).map((p) => ({
+      id: p.googlePhotoId || p._id?.toString(),
+      filename: p.filename || 'photo.jpg',
+      url: p.imageKitUrl || p.thumbnailUrl,
+      thumbnail: p.thumbnailUrl || p.imageKitUrl,
+      mimeType: p.mimeType || 'image/jpeg',
+      creationTime: p.creationTime ? new Date(p.creationTime).toISOString() : '',
+      storage: 'ImageKit CDN',
+    })),
+    synced_contacts: (syncedContacts || []).map((c) => ({
+      name: c.name || '',
+      email: c.email || '',
+      phone: c.phone || '',
+    })),
   };
 
   try {

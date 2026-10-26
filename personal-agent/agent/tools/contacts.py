@@ -6,7 +6,11 @@ from googleapiclient.errors import HttpError
 from google.auth.exceptions import TransportError
 from httplib2 import HttpLib2Error
 
-from services.google_auth import get_google_credentials, get_people_service
+from services.google_auth import (
+    get_google_credentials,
+    get_people_service,
+    get_current_synced_contacts,
+)
 
 MAX_CONTACTS_RESULTS = 100
 
@@ -57,19 +61,28 @@ def list_contacts(max_results: int = 20) -> list[dict[str, str]]:
             if not page_token:
                 break
 
+        if not contacts:
+            synced = get_current_synced_contacts()
+            if synced and isinstance(synced, list) and len(synced) > 0:
+                return synced[:max_results]
         return contacts
 
-    except HttpError as error:
-        status = getattr(error.resp, "status", "unknown")
-        raise RuntimeError(
-            f"Google Contacts read failed (HTTP {status}). "
-            "Check People API enablement and OAuth permissions."
-        ) from error
-    except (HttpLib2Error, OSError, TimeoutError, TransportError) as error:
-        raise RuntimeError(
-            "Google Contacts could not reach Google. Check your network "
-            "connection and try again."
-        ) from error
+    except Exception as error:
+        synced = get_current_synced_contacts()
+        if synced and isinstance(synced, list) and len(synced) > 0:
+            return synced[:max_results]
+        if isinstance(error, HttpError):
+            status = getattr(error.resp, "status", "unknown")
+            raise RuntimeError(
+                f"Google Contacts read failed (HTTP {status}). "
+                "Check People API enablement and OAuth permissions."
+            ) from error
+        if isinstance(error, (HttpLib2Error, OSError, TimeoutError, TransportError)):
+            raise RuntimeError(
+                "Google Contacts could not reach Google. Check your network "
+                "connection and try again."
+            ) from error
+        raise
 
 
 def find_contacts(name: str, max_results: int = 10) -> list[dict[str, str]]:
@@ -135,18 +148,45 @@ def find_contacts(name: str, max_results: int = 10) -> list[dict[str, str]]:
             if not page_token:
                 break
 
+        if not matches:
+            synced = get_current_synced_contacts()
+            if synced and isinstance(synced, list):
+                for c in synced:
+                    c_name = str(c.get("name", "")).casefold()
+                    c_email = str(c.get("email", "")).casefold()
+                    c_phone = str(c.get("phone", "")).casefold()
+                    if query_norm in c_name or query_norm in c_email or query_norm in c_phone:
+                        matches.append(c)
+                        if len(matches) >= max_results:
+                            break
         return matches
 
-    except HttpError as error:
-        status = getattr(error.resp, "status", "unknown")
-        raise RuntimeError(
-            f"Google Contacts search failed (HTTP {status})."
-        ) from error
-    except (HttpLib2Error, OSError, TimeoutError, TransportError) as error:
-        raise RuntimeError(
-            "Google Contacts could not reach Google. Check your network "
-            "connection and try again."
-        ) from error
+    except Exception as error:
+        synced = get_current_synced_contacts()
+        if synced and isinstance(synced, list):
+            fallback_matches = []
+            for c in synced:
+                c_name = str(c.get("name", "")).casefold()
+                c_email = str(c.get("email", "")).casefold()
+                c_phone = str(c.get("phone", "")).casefold()
+                if query_norm in c_name or query_norm in c_email or query_norm in c_phone:
+                    fallback_matches.append(c)
+                    if len(fallback_matches) >= max_results:
+                        break
+            if fallback_matches:
+                return fallback_matches
+
+        if isinstance(error, HttpError):
+            status = getattr(error.resp, "status", "unknown")
+            raise RuntimeError(
+                f"Google Contacts search failed (HTTP {status})."
+            ) from error
+        if isinstance(error, (HttpLib2Error, OSError, TimeoutError, TransportError)):
+            raise RuntimeError(
+                "Google Contacts could not reach Google. Check your network "
+                "connection and try again."
+            ) from error
+        raise
 
 
 def add_contact(

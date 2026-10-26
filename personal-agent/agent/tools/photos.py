@@ -3,13 +3,33 @@
 import json
 import os
 import requests
-from services.google_auth import get_google_credentials, get_current_context_tokens
+from services.google_auth import (
+    get_google_credentials,
+    get_current_context_tokens,
+    get_current_synced_photos,
+)
 
 IMAGEKIT_URL_ENDPOINT = os.getenv("IMAGEKIT_URL_ENDPOINT", "https://ik.imagekit.io/5jmqc8tkm")
 
 
 def list_photos(max_results: int = 10) -> list[dict[str, str]]:
-    """Fetch photos from Google Photos Library API and return displayable items."""
+    """Fetch photos from synced ImageKit storage or Google Photos API and return displayable items."""
+    # 1. Check if user has photos already synchronized to ImageKit CDN
+    synced = get_current_synced_photos()
+    if synced and isinstance(synced, list) and len(synced) > 0:
+        photos = []
+        for p in synced[:max_results]:
+            photos.append({
+                "id": str(p.get("id") or ""),
+                "filename": str(p.get("filename") or "photo.jpg"),
+                "mimeType": str(p.get("mimeType") or "image/jpeg"),
+                "url": str(p.get("url") or p.get("thumbnail") or ""),
+                "creationTime": str(p.get("creationTime") or ""),
+                "storage": "ImageKit CDN",
+            })
+        return photos
+
+    # 2. Otherwise fetch live from Google APIs using OAuth token
     tokens = get_current_context_tokens()
     access_token = None
     if tokens and isinstance(tokens, dict):

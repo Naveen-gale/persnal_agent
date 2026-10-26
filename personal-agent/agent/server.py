@@ -25,6 +25,8 @@ from services.google_auth import (
     get_current_context_tokens,
     reset_context_tokens,
     set_context_tokens,
+    set_context_synced_data,
+    reset_context_synced_data,
 )
 
 AGENT_SERVICE_SECRET = os.getenv("AGENT_SERVICE_SECRET", "")
@@ -53,6 +55,12 @@ class InvokeRequest(BaseModel):
     )
     google_tokens: dict[str, Any] | None = Field(
         default=None, description="Decrypted per-user Google OAuth credentials"
+    )
+    synced_photos: list[dict[str, Any]] | None = Field(
+        default=None, description="User's synced photos stored on ImageKit CDN"
+    )
+    synced_contacts: list[dict[str, Any]] | None = Field(
+        default=None, description="User's synced contacts from MongoDB"
     )
 
 
@@ -160,8 +168,9 @@ def invoke_agent(
     """Execute a single agent turn with conversation context and user credentials."""
     _verify_secret(x_agent_secret, request)
 
-    # Set per-request Google credentials in thread-local context
+    # Set per-request Google credentials and synced data in thread-local context
     ctx_token = set_context_tokens(req.google_tokens)
+    synced_ctx = set_context_synced_data(req.synced_photos, req.synced_contacts)
 
     try:
         result = agent.invoke({
@@ -186,6 +195,7 @@ def invoke_agent(
             detail=f"Agent execution error: {str(err)}",
         ) from err
     finally:
+        reset_context_synced_data(synced_ctx)
         reset_context_tokens(ctx_token)
 
 

@@ -1,18 +1,57 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { api } from '../api/client.js';
-import { Mail, CheckCircle2, XCircle, AlertTriangle, ExternalLink, RefreshCw, X, Shield, Lock } from 'lucide-react';
+import { Mail, CheckCircle2, XCircle, AlertTriangle, ExternalLink, RefreshCw, X, Shield, Lock, Database } from 'lucide-react';
 
 export function GoogleIntegrationModal({ isOpen, onClose }) {
   const { googleStatus, refreshGoogleStatus } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [syncJob, setSyncJob] = useState(null);
+  const [resyncing, setResyncing] = useState(false);
+  const pollTimerRef = useRef(null);
 
-  React.useEffect(() => {
+  const fetchSyncStatus = async () => {
+    try {
+      const job = await api.getSyncJobStatus();
+      setSyncJob(job);
+      return job;
+    } catch {
+      return null;
+    }
+  };
+
+  useEffect(() => {
     if (isOpen) {
       refreshGoogleStatus();
+      fetchSyncStatus();
     }
+
+    return () => {
+      if (pollTimerRef.current) {
+        clearInterval(pollTimerRef.current);
+        pollTimerRef.current = null;
+      }
+    };
   }, [isOpen, refreshGoogleStatus]);
+
+  // Poll sync status if active
+  useEffect(() => {
+    if (syncJob && (syncJob.status === 'syncing' || syncJob.status === 'pending')) {
+      if (!pollTimerRef.current) {
+        pollTimerRef.current = setInterval(async () => {
+          const job = await fetchSyncStatus();
+          if (job && job.status !== 'syncing' && job.status !== 'pending') {
+            clearInterval(pollTimerRef.current);
+            pollTimerRef.current = null;
+          }
+        }, 1500);
+      }
+    } else if (pollTimerRef.current) {
+      clearInterval(pollTimerRef.current);
+      pollTimerRef.current = null;
+    }
+  }, [syncJob]);
 
   if (!isOpen) return null;
 
@@ -32,6 +71,21 @@ export function GoogleIntegrationModal({ isOpen, onClose }) {
     }
   };
 
+  const handleResyncAll = async () => {
+    try {
+      setResyncing(true);
+      setError('');
+      const res = await api.resyncAllGoogleData();
+      if (res?.syncJob) {
+        setSyncJob(res.syncJob);
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to trigger resync.');
+    } finally {
+      setResyncing(false);
+    }
+  };
+
   const handleDisconnect = async () => {
     if (!window.confirm('Are you sure you want to disconnect your Google account? Your saved tokens will be deleted from the database.')) {
       return;
@@ -41,6 +95,7 @@ export function GoogleIntegrationModal({ isOpen, onClose }) {
       setError('');
       await api.disconnectGoogle();
       await refreshGoogleStatus();
+      setSyncJob(null);
     } catch (err) {
       setError(err.message || 'Failed to disconnect.');
     } finally {
@@ -124,13 +179,93 @@ export function GoogleIntegrationModal({ isOpen, onClose }) {
           )}
         </div>
 
+        {/* Persistent Sync Status Card (MongoDB & ImageKit) */}
+        {isConnected && (
+          <div style={styles.syncJobCard}>
+            <div style={styles.syncJobHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Database size={16} color="#3b82f6" />
+                <span style={styles.syncJobTitle}>Persistent DB & ImageKit Sync</span>
+              </div>
+              <span
+                style={{
+                  ...styles.syncJobStatusBadge,
+                  backgroundColor:
+                    syncJob?.status === 'completed'
+                      ? 'rgba(16, 185, 129, 0.14)'
+                      : syncJob?.status === 'syncing' || syncJob?.status === 'pending'
+                      ? 'rgba(59, 130, 246, 0.14)'
+                      : 'rgba(239, 68, 68, 0.14)',
+                  color:
+                    syncJob?.status === 'completed'
+                      ? '#34d399'
+                      : syncJob?.status === 'syncing' || syncJob?.status === 'pending'
+                      ? '#60a5fa'
+                      : '#fca5a5',
+                }}
+              >
+                {(syncJob?.status === 'syncing' || syncJob?.status === 'pending') && (
+                  <RefreshCw size={11} className="animate-spin" style={{ marginRight: 4 }} />
+                )}
+                {syncJob?.status === 'completed'
+                  ? 'Synced to DB'
+                  : syncJob?.status === 'syncing'
+                  ? 'Syncing in background...'
+                  : syncJob?.status === 'pending'
+                  ? 'Pending...'
+                  : 'Ready'}
+              </span>
+            </div>
+
+            <p style={styles.syncJobMessage}>
+              {syncJob?.message || 'When connected, your data automatically syncs to MongoDB and ImageKit even if you close the browser.'}
+            </p>
+
+            {/* Counters grid */}
+            <div style={styles.syncCountersGrid}>
+              <div style={styles.syncCounterItem}>
+                <span style={styles.syncCounterNum}>{syncJob?.contacts?.synced || 0}</span>
+                <span style={styles.syncCounterLabel}>Contacts in DB</span>
+              </div>
+              <div style={styles.syncCounterItem}>
+                <span style={styles.syncCounterNum}>{syncJob?.gmail?.synced || 0}</span>
+                <span style={styles.syncCounterLabel}>Emails in DB</span>
+              </div>
+              <div style={styles.syncCounterItem}>
+                <span style={styles.syncCounterNum}>{syncJob?.drive?.synced || 0}</span>
+                <span style={styles.syncCounterLabel}>Drive Files in DB</span>
+              </div>
+              <div style={styles.syncCounterItem}>
+                <span style={styles.syncCounterNum}>{syncJob?.photos?.synced || 0}</span>
+                <span style={styles.syncCounterLabel}>Photos in ImageKit</span>
+              </div>
+            </div>
+
+            {/* Manual Resync Trigger */}
+            <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                onClick={handleResyncAll}
+                disabled={resyncing || syncJob?.status === 'syncing'}
+                style={styles.resyncBtn}
+              >
+                <RefreshCw
+                  size={12}
+                  className={resyncing || syncJob?.status === 'syncing' ? 'animate-spin' : ''}
+                  style={{ marginRight: 6 }}
+                />
+                {syncJob?.status === 'syncing' ? 'Syncing in Background…' : 'Resync All Data to DB'}
+              </button>
+            </div>
+          </div>
+        )}
+
         <div style={styles.infoCard}>
           <div style={styles.infoCardHeader}>
             <Lock size={16} color="#3b82f6" />
-            <span style={styles.infoTitle}>Gmail, Contacts & Google Photos (Stored on ImageKit)</span>
+            <span style={styles.infoTitle}>Universal Sync: Contacts, Gmail, Drive & ImageKit Photos</span>
           </div>
           <p style={styles.infoText}>
-            When connected, your agent can read/send Gmail, access Contacts, and <strong>automatically sync your Google Photos directly to your ImageKit CDN storage</strong>.
+            When connected, all your <strong>Google Contacts</strong>, <strong>Gmail</strong>, and <strong>Drive metadata</strong> are securely saved to your MongoDB database with your user email for identification, and your <strong>Google Photos</strong> are automatically stored on ImageKit CDN so your personal AI agent can access and work with them anytime.
             {isConnected && ' Click "Re-authorize Google" below to grant updated Photos and Gmail Send permissions.'}
           </p>
         </div>
@@ -328,6 +463,76 @@ const styles = {
     borderRadius: '10px',
     padding: '14px',
     marginBottom: '20px',
+  },
+  syncJobCard: {
+    backgroundColor: '#0b0f19',
+    border: '1px solid rgba(59, 130, 246, 0.25)',
+    borderRadius: '12px',
+    padding: '14px',
+    marginBottom: '16px',
+  },
+  syncJobHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: '6px',
+  },
+  syncJobTitle: {
+    fontSize: '13px',
+    fontWeight: '600',
+    color: '#93c5fd',
+  },
+  syncJobStatusBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    padding: '2px 8px',
+    borderRadius: '12px',
+    fontSize: '11px',
+    fontWeight: '600',
+  },
+  syncJobMessage: {
+    fontSize: '12px',
+    color: '#94a3b8',
+    margin: '4px 0 10px 0',
+    lineHeight: 1.4,
+  },
+  syncCountersGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(4, 1fr)',
+    gap: '8px',
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    padding: '10px 8px',
+    borderRadius: '8px',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
+  },
+  syncCounterItem: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center',
+  },
+  syncCounterNum: {
+    fontSize: '15px',
+    fontWeight: '700',
+    color: '#f8fafc',
+  },
+  syncCounterLabel: {
+    fontSize: '10px',
+    color: '#64748b',
+    marginTop: '2px',
+  },
+  resyncBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    padding: '5px 10px',
+    backgroundColor: 'rgba(59, 130, 246, 0.15)',
+    color: '#60a5fa',
+    border: '1px solid rgba(59, 130, 246, 0.3)',
+    borderRadius: '6px',
+    fontSize: '11px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease',
   },
   infoCardHeader: {
     display: 'flex',

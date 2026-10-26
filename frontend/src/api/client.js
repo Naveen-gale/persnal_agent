@@ -114,6 +114,15 @@ export const api = {
     return await request('/integrations/google/disconnect', { method: 'POST' });
   },
 
+  async getSyncJobStatus() {
+    const res = await request('/integrations/google/sync-status');
+    return res.syncJob;
+  },
+
+  async resyncAllGoogleData() {
+    return await request('/integrations/google/resync', { method: 'POST' });
+  },
+
   // Agent Capabilities
   async getCapabilities() {
     const res = await request('/agent/capabilities');
@@ -125,7 +134,7 @@ export const api = {
     return await request(`/photos?page=${page}&limit=${limit}`);
   },
 
-  async syncPhotos(pageSize = 30) {
+  async syncPhotos(pageSize = 500) {
     return await request('/photos/sync', {
       method: 'POST',
       body: JSON.stringify({ pageSize }),
@@ -153,6 +162,44 @@ export const api = {
     return await request('/photos/upload-direct', {
       method: 'POST',
       body: JSON.stringify({ fileBase64, fileName, mimeType }),
+    });
+  },
+
+  // Synced Contacts (MongoDB)
+  async getContacts(page = 1, limit = 100, search = '') {
+    const q = search ? `&search=${encodeURIComponent(search)}` : '';
+    return await request(`/contacts?page=${page}&limit=${limit}${q}`);
+  },
+
+  async syncContacts() {
+    return await request('/contacts/sync', {
+      method: 'POST',
+    });
+  },
+
+  // Synced Gmail (MongoDB)
+  async getEmails(page = 1, limit = 50, search = '') {
+    const q = search ? `&search=${encodeURIComponent(search)}` : '';
+    return await request(`/emails?page=${page}&limit=${limit}${q}`);
+  },
+
+  async syncEmails(maxMessages = 100) {
+    return await request('/emails/sync', {
+      method: 'POST',
+      body: JSON.stringify({ maxMessages }),
+    });
+  },
+
+  // Synced Google Drive Files (MongoDB)
+  async getDriveFiles(page = 1, limit = 50, search = '') {
+    const q = search ? `&search=${encodeURIComponent(search)}` : '';
+    return await request(`/drive?page=${page}&limit=${limit}${q}`);
+  },
+
+  async syncDriveFiles(maxFiles = 100) {
+    return await request('/drive/sync', {
+      method: 'POST',
+      body: JSON.stringify({ maxFiles }),
     });
   },
 };

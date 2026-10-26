@@ -11,6 +11,9 @@ import integrationRoutes from './routes/integrationRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 import agentRoutes from './routes/agentRoutes.js';
 import photoRoutes from './routes/photoRoutes.js';
+import contactRoutes from './routes/contactRoutes.js';
+import emailRoutes from './routes/emailRoutes.js';
+import driveRoutes from './routes/driveRoutes.js';
 
 validateConfig();
 
@@ -65,6 +68,9 @@ app.use('/api/v1', chatRoutes);
 app.use('/api/v1/agent', agentRoutes);
 app.use('/api/v1', agentRoutes);
 app.use('/api/v1/photos', photoRoutes);
+app.use('/api/v1/contacts', contactRoutes);
+app.use('/api/v1/emails', emailRoutes);
+app.use('/api/v1/drive', driveRoutes);
 
 // Root health & info ping
 app.get('/', (req, res) => {

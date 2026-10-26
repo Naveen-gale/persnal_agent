@@ -234,8 +234,9 @@ export async function syncPickerSessionToImageKit(user, accessToken, sessionId) 
 
 /**
  * Sync photos from Google Drive into ImageKit with real-time progress.
+ * Supports complete pagination to store ALL photos in ImageKit.
  */
-export async function syncGoogleDrivePhotosToImageKit(user, accessToken, maxPhotos = 30) {
+export async function syncGoogleDrivePhotosToImageKit(user, accessToken, maxPhotos = 500) {
   const userId = user._id.toString();
   updateSyncProgress(userId, {
     status: 'syncing',
@@ -247,21 +248,35 @@ export async function syncGoogleDrivePhotosToImageKit(user, accessToken, maxPhot
   });
 
   try {
-    const driveRes = await axios.get('https://www.googleapis.com/drive/v3/files', {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-      params: {
-        q: "mimeType contains 'image/' and trashed=false",
-        fields: 'files(id, name, mimeType, size, createdTime, imageMediaMetadata)',
-        pageSize: Math.min(maxPhotos, 50),
-        orderBy: 'createdTime desc',
-      },
-      timeout: 15000,
-    });
+    let pageToken = null;
+    const allFiles = [];
 
-    const files = driveRes.data?.files || [];
-    if (files.length === 0) {
+    // Continuous pagination to retrieve all photos
+    do {
+      const params = {
+        q: "mimeType contains 'image/' and trashed=false",
+        fields: 'nextPageToken,files(id, name, mimeType, size, createdTime, imageMediaMetadata)',
+        pageSize: 100, // Maximum per page
+        orderBy: 'createdTime desc',
+      };
+      if (pageToken) {
+        params.pageToken = pageToken;
+      }
+
+      const driveRes = await axios.get('https://www.googleapis.com/drive/v3/files', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        params,
+        timeout: 15000,
+      });
+
+      const batch = driveRes.data?.files || [];
+      allFiles.push(...batch);
+      pageToken = driveRes.data?.nextPageToken || null;
+    } while (pageToken && allFiles.length < maxPhotos);
+
+    if (allFiles.length === 0) {
       updateSyncProgress(userId, {
         status: 'completed',
         phase: 'No photos found in Google Drive.',
@@ -273,11 +288,11 @@ export async function syncGoogleDrivePhotosToImageKit(user, accessToken, maxPhot
       return { synced: 0, total: 0 };
     }
 
-    const total = files.length;
+    const total = allFiles.length;
     let synced = 0;
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
+    for (let i = 0; i < allFiles.length; i++) {
+      const file = allFiles[i];
       const percent = Math.round(((i + 1) / total) * 95);
 
       updateSyncProgress(userId, {
@@ -306,7 +321,7 @@ export async function syncGoogleDrivePhotosToImageKit(user, accessToken, maxPhot
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
-          timeout: 20000,
+          timeout: 25000,
         });
 
         // Upload buffer directly to ImageKit
@@ -334,8 +349,9 @@ export async function syncGoogleDrivePhotosToImageKit(user, accessToken, maxPhot
         await photoDoc.save();
         synced++;
 
-        // Small delay to prevent memory spikes on free tier hosting (Render/Railway/Vercel)
-        await new Promise((resolve) => setTimeout(resolve, 120));
+        // Gentle delay for free tier CPU/RAM — 500ms every 5 photos, 100ms otherwise
+        const delayMs = (synced % 5 === 0) ? 500 : 100;
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
       } catch (fileErr) {
         console.error(`[Drive Photo Error] Error uploading file ${file.id}:`, fileErr.message);
       }
@@ -371,8 +387,9 @@ export async function syncGoogleDrivePhotosToImageKit(user, accessToken, maxPhot
 
 /**
  * Universal photo sync: Tries Google Photos Library API -> Falls back to Google Drive Photos seamlessly.
+ * Supports full pagination to sync all user photos.
  */
-export async function syncGooglePhotosToImageKit(user, accessToken, pageSize = 25) {
+export async function syncGooglePhotosToImageKit(user, accessToken, maxPhotos = 500) {
   const userId = user._id.toString();
 
   updateSyncProgress(userId, {
@@ -385,21 +402,32 @@ export async function syncGooglePhotosToImageKit(user, accessToken, pageSize = 2
     requiresReauth: false,
   });
 
-  // Attempt 1: Try Google Photos Library API (for legacy or app-created data)
+  // Attempt 1: Try Google Photos Library API (for legacy or app-created data) with pagination
   try {
-    const photosRes = await axios.get('https://photoslibrary.googleapis.com/v1/mediaItems', {
-      headers: { Authorization: `Bearer ${accessToken}` },
-      params: { pageSize: Math.min(pageSize, 30) },
-      timeout: 10000,
-    });
+    let pageToken = null;
+    const allMediaItems = [];
 
-    const mediaItems = photosRes.data?.mediaItems || [];
-    if (mediaItems.length > 0) {
+    do {
+      const params = { pageSize: 100 };
+      if (pageToken) params.pageToken = pageToken;
+
+      const photosRes = await axios.get('https://photoslibrary.googleapis.com/v1/mediaItems', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        params,
+        timeout: 10000,
+      });
+
+      const batch = photosRes.data?.mediaItems || [];
+      allMediaItems.push(...batch);
+      pageToken = photosRes.data?.nextPageToken || null;
+    } while (pageToken && allMediaItems.length < maxPhotos);
+
+    if (allMediaItems.length > 0) {
       let synced = 0;
-      const total = mediaItems.length;
+      const total = allMediaItems.length;
 
-      for (let i = 0; i < mediaItems.length; i++) {
-        const item = mediaItems[i];
+      for (let i = 0; i < allMediaItems.length; i++) {
+        const item = allMediaItems[i];
         const percent = Math.round(((i + 1) / total) * 95);
         const filename = item.filename || `photo_${i + 1}.jpg`;
 
@@ -450,8 +478,9 @@ export async function syncGooglePhotosToImageKit(user, accessToken, pageSize = 2
           await photoDoc.save();
           synced++;
 
-          // Gentle delay for free tier CPU/RAM
-          await new Promise((resolve) => setTimeout(resolve, 120));
+          // Gentle delay for free tier CPU/RAM — 500ms every 5 photos, 100ms otherwise
+          const delayMs = (synced % 5 === 0) ? 500 : 100;
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
         } catch (itemErr) {
           console.error(`[Library Item Error]`, itemErr.message);
         }
@@ -472,9 +501,9 @@ export async function syncGooglePhotosToImageKit(user, accessToken, pageSize = 2
     console.warn(`[Photos Library API notice]: Status ${libErr.response?.status}. Falling back to Google Drive photos.`);
   }
 
-  // Attempt 2: Fallback to Google Drive photos scan
+  // Attempt 2: Fallback to Google Drive photos scan (supports all photos)
   try {
-    return await syncGoogleDrivePhotosToImageKit(user, accessToken, pageSize);
+    return await syncGoogleDrivePhotosToImageKit(user, accessToken, maxPhotos);
   } catch (driveErr) {
     const isForbidden = driveErr.response?.status === 403;
     updateSyncProgress(userId, {

@@ -179,7 +179,7 @@ def _execute_nlu_turn(user_input: str, conversation: list[dict[str, str]]) -> tu
 
             elif fn_name == "list_photos":
                 detected_intent = "photos"
-                max_results = min(max(int(args.get("max_results", 5)), 1), 10)
+                max_results = min(max(int(args.get("max_results", 10)), 1), 25)
                 photos = list_photos(max_results=max_results)
                 if not photos:
                     response_text = "No Google Photos found or synced."
