@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
-import { Bot, Lock, Mail, User, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Bot, Lock, Mail, User, ArrowRight, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
 
 export function RegisterPage({ onSwitchToLogin }) {
   const { register } = useAuth();
@@ -36,247 +36,130 @@ export function RegisterPage({ onSwitchToLogin }) {
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card} className="animate-fade-in">
-        <div style={styles.header}>
-          <div style={styles.logoBadge}>
-            <Bot size={28} color="#3b82f6" />
+    <div className="min-h-screen w-full flex items-center justify-center bg-zinc-950 px-4 py-12 text-zinc-100">
+      <div className="w-full max-w-sm">
+        {/* Brand Header */}
+        <div className="flex flex-col items-center text-center mb-8">
+          <div className="w-11 h-11 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-3 text-zinc-200">
+            <Bot size={22} />
           </div>
-          <h1 style={styles.title}>Create Agent Account</h1>
-          <p style={styles.subtitle}>Set up your personal master access credentials</p>
+          <h1 className="text-xl font-semibold tracking-tight text-zinc-100">Create Agent Account</h1>
+          <p className="text-xs text-zinc-400 mt-1">Set up your master credentials to manage your personal AI</p>
         </div>
 
-        {error && (
-          <div style={styles.errorBanner}>
-            <AlertCircle size={18} style={{ flexShrink: 0 }} />
-            <span>{error}</span>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} style={styles.form}>
-          <div style={styles.fieldGroup}>
-            <label style={styles.label}>Your Name</label>
-            <div style={styles.inputWrapper}>
-              <User size={18} style={styles.inputIcon} />
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Galen"
-                style={styles.input}
-                disabled={loading}
-              />
+        {/* Card */}
+        <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 sm:p-7 shadow-xl shadow-black/40">
+          {error && (
+            <div className="flex items-start gap-2.5 p-3 mb-5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs">
+              <AlertCircle size={15} className="shrink-0 mt-0.5 text-rose-400" />
+              <span className="leading-relaxed">{error}</span>
             </div>
-          </div>
+          )}
 
-          <div style={styles.fieldGroup}>
-            <label style={styles.label}>Email Address</label>
-            <div style={styles.inputWrapper}>
-              <Mail size={18} style={styles.inputIcon} />
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@domain.com"
-                style={styles.input}
-                disabled={loading}
-              />
+          <form onSubmit={handleSubmit} className="space-y-3.5">
+            <div>
+              <label className="block text-xs font-medium text-zinc-300 mb-1.5">Your Name</label>
+              <div className="relative">
+                <User size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Galen"
+                  disabled={loading}
+                  className="w-full pl-9 pr-3 py-2 text-xs bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition disabled:opacity-50"
+                />
+              </div>
             </div>
-          </div>
 
-          <div style={styles.fieldGroup}>
-            <label style={styles.label}>Master Password (min 8 chars)</label>
-            <div style={styles.inputWrapper}>
-              <Lock size={18} style={styles.inputIcon} />
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••••••"
-                style={styles.input}
-                disabled={loading}
-              />
+            <div>
+              <label className="block text-xs font-medium text-zinc-300 mb-1.5">Email address</label>
+              <div className="relative">
+                <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@example.com"
+                  disabled={loading}
+                  className="w-full pl-9 pr-3 py-2 text-xs bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition disabled:opacity-50"
+                />
+              </div>
             </div>
-          </div>
 
-          <div style={styles.fieldGroup}>
-            <label style={styles.label}>Confirm Password</label>
-            <div style={styles.inputWrapper}>
-              <Lock size={18} style={styles.inputIcon} />
-              <input
-                type="password"
-                required
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="••••••••••••"
-                style={styles.input}
-                disabled={loading}
-              />
+            <div>
+              <label className="block text-xs font-medium text-zinc-300 mb-1.5">Password (min 8 chars)</label>
+              <div className="relative">
+                <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••••••"
+                  disabled={loading}
+                  className="w-full pl-9 pr-3 py-2 text-xs bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition disabled:opacity-50"
+                />
+              </div>
             </div>
-          </div>
 
-          <button type="submit" disabled={loading} style={styles.submitButton}>
-            {loading ? (
-              <span className="animate-pulse">Creating Account...</span>
-            ) : (
-              <>
-                Create Account & Proceed
-                <ArrowRight size={18} style={{ marginLeft: 8 }} />
-              </>
-            )}
-          </button>
-        </form>
+            <div>
+              <label className="block text-xs font-medium text-zinc-300 mb-1.5">Confirm Password</label>
+              <div className="relative">
+                <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                <input
+                  type="password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••••••"
+                  disabled={loading}
+                  className="w-full pl-9 pr-3 py-2 text-xs bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition disabled:opacity-50"
+                />
+              </div>
+            </div>
 
-        <div style={styles.footer}>
-          <p style={styles.switchText}>
-            Already created an account?{' '}
-            <button type="button" onClick={onSwitchToLogin} style={styles.linkButton}>
-              Sign In
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 text-xs font-medium rounded-lg bg-zinc-100 text-zinc-950 hover:bg-white active:bg-zinc-200 transition disabled:opacity-60 disabled:cursor-not-allowed mt-2 shadow-sm"
+            >
+              {loading ? (
+                <>
+                  <Loader2 size={14} className="animate-spin" />
+                  <span>Creating Account...</span>
+                </>
+              ) : (
+                <>
+                  <span>Create Account</span>
+                  <ArrowRight size={14} />
+                </>
+              )}
             </button>
-          </p>
+          </form>
 
-          <div style={styles.securityNote}>
-            <ShieldCheck size={14} color="#10b981" />
-            <span>Securely hashed using bcrypt. Access your agent from any device.</span>
+          <div className="mt-6 pt-5 border-t border-zinc-800/80 text-center">
+            <p className="text-xs text-zinc-400">
+              Already have an account?{' '}
+              <button
+                type="button"
+                onClick={onSwitchToLogin}
+                className="font-medium text-zinc-200 hover:text-white underline underline-offset-4 transition"
+              >
+                Sign In
+              </button>
+            </p>
           </div>
+        </div>
+
+        {/* Security badge */}
+        <div className="flex items-center justify-center gap-2 mt-6 text-[11px] text-zinc-500">
+          <ShieldCheck size={13} className="text-zinc-400 shrink-0" />
+          <span>Encrypted database · Multi-device access with single login</span>
         </div>
       </div>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    minHeight: '100vh',
-    width: '100%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '24px',
-    backgroundColor: '#0b0f19',
-  },
-  card: {
-    width: '100%',
-    maxWidth: '440px',
-    backgroundColor: '#121827',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
-    borderRadius: '16px',
-    padding: '36px',
-    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.4)',
-  },
-  header: {
-    textAlign: 'center',
-    marginBottom: '24px',
-  },
-  logoBadge: {
-    width: '56px',
-    height: '56px',
-    borderRadius: '14px',
-    backgroundColor: 'rgba(59, 130, 246, 0.12)',
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: '16px',
-    border: '1px solid rgba(59, 130, 246, 0.24)',
-  },
-  title: {
-    fontSize: '24px',
-    fontWeight: '700',
-    color: '#f8fafc',
-    margin: '0 0 6px 0',
-  },
-  subtitle: {
-    fontSize: '14px',
-    color: '#94a3b8',
-    margin: 0,
-  },
-  errorBanner: {
-    backgroundColor: 'rgba(239, 68, 68, 0.12)',
-    border: '1px solid rgba(239, 68, 68, 0.3)',
-    color: '#fca5a5',
-    padding: '12px 14px',
-    borderRadius: '8px',
-    fontSize: '13px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    marginBottom: '20px',
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '16px',
-  },
-  fieldGroup: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '6px',
-  },
-  label: {
-    fontSize: '13px',
-    fontWeight: '500',
-    color: '#cbd5e1',
-  },
-  inputWrapper: {
-    position: 'relative',
-    display: 'flex',
-    alignItems: 'center',
-  },
-  inputIcon: {
-    position: 'absolute',
-    left: '14px',
-    color: '#64748b',
-    pointerEvents: 'none',
-  },
-  input: {
-    width: '100%',
-    padding: '12px 14px 12px 42px',
-    backgroundColor: '#0b0f19',
-    border: '1px solid rgba(255, 255, 255, 0.12)',
-    borderRadius: '8px',
-    color: '#f8fafc',
-    fontSize: '14px',
-  },
-  submitButton: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '12px 20px',
-    backgroundColor: '#3b82f6',
-    color: '#ffffff',
-    borderRadius: '8px',
-    fontSize: '14px',
-    fontWeight: '600',
-    marginTop: '6px',
-  },
-  footer: {
-    marginTop: '24px',
-    paddingTop: '20px',
-    borderTop: '1px solid rgba(255, 255, 255, 0.06)',
-    textAlign: 'center',
-  },
-  switchText: {
-    fontSize: '13px',
-    color: '#94a3b8',
-    marginBottom: '16px',
-  },
-  linkButton: {
-    background: 'none',
-    color: '#3b82f6',
-    fontWeight: '600',
-    padding: 0,
-    textDecoration: 'underline',
-  },
-  securityNote: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '8px',
-    fontSize: '12px',
-    color: '#64748b',
-    lineHeight: 1.4,
-  },
-};

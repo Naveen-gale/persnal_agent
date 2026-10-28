@@ -1,5 +1,13 @@
+import dns from 'dns';
 import mongoose from 'mongoose';
 import { config } from './env.js';
+
+// Resolve MongoDB Atlas SRV records reliably on Windows/ISP networks by using Google & Cloudflare DNS
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4']);
+} catch (dnsErr) {
+  console.warn('[DNS Warning] Could not set custom DNS servers:', dnsErr.message);
+}
 
 let isConnected = false;
 

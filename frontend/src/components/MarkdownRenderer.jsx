@@ -11,31 +11,35 @@ function CodeBlock({ code, language }) {
   };
 
   return (
-    <div style={codeStyles.wrapper}>
-      <div style={codeStyles.header}>
-        <span style={codeStyles.lang}>{language || 'code'}</span>
-        <button onClick={handleCopy} style={codeStyles.copyBtn} title="Copy code">
+    <div className="my-3 rounded-lg overflow-hidden border border-zinc-800 bg-zinc-900 text-xs font-mono">
+      <div className="flex items-center justify-between px-3 py-1.5 bg-zinc-950/80 border-b border-zinc-800 text-zinc-400">
+        <span className="text-[11px] uppercase tracking-wider">{language || 'code'}</span>
+        <button
+          onClick={handleCopy}
+          className="flex items-center gap-1.5 text-[11px] text-zinc-400 hover:text-zinc-200 transition"
+          title="Copy code"
+        >
           {copied ? (
             <>
-              <Check size={13} color="#10b981" />
-              <span style={{ color: '#10b981' }}>Copied</span>
+              <Check size={12} className="text-emerald-400" />
+              <span className="text-emerald-400">Copied</span>
             </>
           ) : (
             <>
-              <Copy size={13} />
+              <Copy size={12} />
               <span>Copy</span>
             </>
           )}
         </button>
       </div>
-      <pre style={codeStyles.pre}>
+      <pre className="p-3 overflow-x-auto text-zinc-200 leading-relaxed custom-scrollbar">
         <code>{code}</code>
       </pre>
     </div>
   );
 }
 
-export function MarkdownRenderer({ content }) {
+export function MarkdownRenderer({ content, isUser = false }) {
   if (!content) return null;
 
   const lines = content.split('\n');
@@ -46,18 +50,18 @@ export function MarkdownRenderer({ content }) {
   const formatInline = (text) => {
     let result = text;
     // Bold
-    result = result.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    result = result.replace(/\*\*(.*?)\*\*/g, `<strong class="font-semibold ${isUser ? 'text-white' : 'text-zinc-100'}">$1</strong>`);
     // Italic
-    result = result.replace(/(\*|_)(.*?)\1/g, '<em>$2</em>');
+    result = result.replace(/(\*|_)(.*?)\1/g, `<em class="italic ${isUser ? 'text-zinc-200' : 'text-zinc-300'}">$2</em>`);
     // Inline code
     result = result.replace(
       /`([^`]+)`/g,
-      '<code style="background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 0.9em; color: #93c5fd;">$1</code>'
+      `<code class="px-1.5 py-0.5 rounded ${isUser ? 'bg-zinc-900 border-zinc-700 text-zinc-100' : 'bg-zinc-800/80 border-zinc-700/50 text-zinc-200'} font-mono text-[11px]">$1</code>`
     );
     // Links
     result = result.replace(
       /\[(.*?)\]\((.*?)\)/g,
-      '<a href="$2" target="_blank" rel="noopener noreferrer" style="color: #60a5fa; text-decoration: underline;">$1</a>'
+      '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-zinc-200 underline underline-offset-2 hover:text-white transition">$1</a>'
     );
     return result;
   };
@@ -98,34 +102,34 @@ export function MarkdownRenderer({ content }) {
           .slice(1, -1)
           .split('|')
           .map((c) => c.trim());
-        const rowLines = tableLines.slice(2); // skip separator row (|---|---|)
+        const rowLines = tableLines.slice(2);
 
         elements.push(
-          <div key={`table-${elements.length}`} style={tableStyles.container}>
-            <table style={tableStyles.table}>
-              <thead>
+          <div key={`table-${elements.length}`} className="my-3 overflow-x-auto rounded-lg border border-zinc-800">
+            <table className="w-full text-xs text-left text-zinc-300">
+              <thead className="bg-zinc-900 border-b border-zinc-800 text-[11px] font-semibold text-zinc-200 uppercase tracking-wider">
                 <tr>
                   {headerCells.map((h, hIdx) => (
                     <th
                       key={hIdx}
-                      style={tableStyles.th}
+                      className="px-3 py-2"
                       dangerouslySetInnerHTML={{ __html: formatInline(h) }}
                     />
                   ))}
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-zinc-800/60 bg-zinc-950/60 font-mono text-[11px]">
                 {rowLines.map((rowStr, rIdx) => {
                   const cells = rowStr
                     .slice(1, -1)
                     .split('|')
                     .map((c) => c.trim());
                   return (
-                    <tr key={rIdx} style={rIdx % 2 === 1 ? tableStyles.trEven : {}}>
+                    <tr key={rIdx} className={rIdx % 2 === 1 ? 'bg-zinc-900/40' : ''}>
                       {cells.map((cell, cIdx) => (
                         <td
                           key={cIdx}
-                          style={tableStyles.td}
+                          className="px-3 py-1.5"
                           dangerouslySetInnerHTML={{ __html: formatInline(cell) }}
                         />
                       ))}
@@ -145,7 +149,7 @@ export function MarkdownRenderer({ content }) {
       elements.push(
         <h2
           key={`h1-${elements.length}`}
-          style={renderStyles.h1}
+          className="text-base font-semibold text-zinc-100 mt-4 mb-2 tracking-tight"
           dangerouslySetInnerHTML={{ __html: formatInline(line.slice(2)) }}
         />
       );
@@ -156,7 +160,7 @@ export function MarkdownRenderer({ content }) {
       elements.push(
         <h3
           key={`h2-${elements.length}`}
-          style={renderStyles.h2}
+          className="text-sm font-semibold text-zinc-200 mt-3 mb-1.5 tracking-tight"
           dangerouslySetInnerHTML={{ __html: formatInline(line.slice(3)) }}
         />
       );
@@ -167,7 +171,7 @@ export function MarkdownRenderer({ content }) {
       elements.push(
         <h4
           key={`h3-${elements.length}`}
-          style={renderStyles.h3}
+          className="text-xs font-semibold text-zinc-300 mt-2 mb-1 tracking-tight"
           dangerouslySetInnerHTML={{ __html: formatInline(line.slice(4)) }}
         />
       );
@@ -185,7 +189,7 @@ export function MarkdownRenderer({ content }) {
       elements.push(
         <blockquote
           key={`quote-${elements.length}`}
-          style={renderStyles.blockquote}
+          className="border-l-2 border-zinc-600 pl-3 py-0.5 my-2 text-xs italic text-zinc-400 bg-zinc-900/40 rounded-r"
           dangerouslySetInnerHTML={{ __html: formatInline(quoteLines.join(' ')) }}
         />
       );
@@ -200,11 +204,11 @@ export function MarkdownRenderer({ content }) {
         index++;
       }
       elements.push(
-        <ul key={`ul-${elements.length}`} style={renderStyles.ul}>
+        <ul key={`ul-${elements.length}`} className={`list-disc pl-5 my-1.5 space-y-1 text-xs ${isUser ? 'text-zinc-100' : 'text-zinc-300'}`}>
           {listItems.map((item, liIdx) => (
             <li
               key={liIdx}
-              style={renderStyles.li}
+              className="leading-relaxed"
               dangerouslySetInnerHTML={{ __html: formatInline(item) }}
             />
           ))}
@@ -221,11 +225,11 @@ export function MarkdownRenderer({ content }) {
         index++;
       }
       elements.push(
-        <ol key={`ol-${elements.length}`} style={renderStyles.ol}>
+        <ol key={`ol-${elements.length}`} className={`list-decimal pl-5 my-1.5 space-y-1 text-xs ${isUser ? 'text-zinc-100' : 'text-zinc-300'}`}>
           {listItems.map((item, liIdx) => (
             <li
               key={liIdx}
-              style={renderStyles.li}
+              className="leading-relaxed"
               dangerouslySetInnerHTML={{ __html: formatInline(item) }}
             />
           ))}
@@ -239,155 +243,15 @@ export function MarkdownRenderer({ content }) {
       elements.push(
         <p
           key={`p-${elements.length}`}
-          style={renderStyles.p}
+          className={`text-xs ${isUser ? 'text-zinc-100' : 'text-zinc-300'} leading-relaxed my-1`}
           dangerouslySetInnerHTML={{ __html: formatInline(line) }}
         />
       );
     } else {
-      elements.push(<div key={`space-${elements.length}`} style={{ height: '6px' }} />);
+      elements.push(<div key={`space-${elements.length}`} className="h-2" />);
     }
     index++;
   }
 
-  return <div style={renderStyles.container}>{elements}</div>;
+  return <div className="space-y-0.5">{elements}</div>;
 }
-
-const codeStyles = {
-  wrapper: {
-    backgroundColor: '#0a0d14',
-    border: '1px solid rgba(255, 255, 255, 0.12)',
-    borderRadius: '10px',
-    margin: '10px 0',
-    overflow: 'hidden',
-  },
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '6px 12px',
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-  },
-  lang: {
-    fontSize: '11px',
-    color: '#94a3b8',
-    textTransform: 'uppercase',
-    fontFamily: 'monospace',
-    fontWeight: '600',
-    letterSpacing: '0.5px',
-  },
-  copyBtn: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '4px',
-    background: 'none',
-    border: 'none',
-    color: '#cbd5e1',
-    fontSize: '11px',
-    cursor: 'pointer',
-    padding: '3px 6px',
-    borderRadius: '4px',
-  },
-  pre: {
-    padding: '12px 14px',
-    margin: 0,
-    overflowX: 'auto',
-    fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-    fontSize: '13px',
-    lineHeight: 1.5,
-    color: '#e2e8f0',
-  },
-};
-
-const tableStyles = {
-  container: {
-    overflowX: 'auto',
-    margin: '10px 0',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
-    borderRadius: '8px',
-  },
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse',
-    fontSize: '13px',
-    textAlign: 'left',
-  },
-  th: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    padding: '8px 12px',
-    fontWeight: '600',
-    color: '#f8fafc',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-  },
-  td: {
-    padding: '8px 12px',
-    color: '#cbd5e1',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
-  },
-  trEven: {
-    backgroundColor: 'rgba(255, 255, 255, 0.02)',
-  },
-};
-
-const renderStyles = {
-  container: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '2px',
-    width: '100%',
-  },
-  h1: {
-    fontSize: '18px',
-    fontWeight: '700',
-    color: '#f8fafc',
-    margin: '10px 0 6px 0',
-  },
-  h2: {
-    fontSize: '16px',
-    fontWeight: '600',
-    color: '#f8fafc',
-    margin: '8px 0 4px 0',
-  },
-  h3: {
-    fontSize: '14px',
-    fontWeight: '600',
-    color: '#f8fafc',
-    margin: '6px 0 2px 0',
-  },
-  blockquote: {
-    margin: '8px 0',
-    padding: '8px 14px',
-    backgroundColor: 'rgba(59, 130, 246, 0.08)',
-    borderLeft: '3px solid #3b82f6',
-    borderRadius: '0 6px 6px 0',
-    color: '#cbd5e1',
-    fontStyle: 'italic',
-    fontSize: '13px',
-  },
-  ul: {
-    margin: '4px 0 6px 20px',
-    padding: 0,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '4px',
-  },
-  ol: {
-    margin: '4px 0 6px 22px',
-    padding: 0,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '4px',
-  },
-  li: {
-    fontSize: '14px',
-    lineHeight: 1.5,
-    color: '#e2e8f0',
-  },
-  p: {
-    fontSize: '14px',
-    lineHeight: 1.55,
-    color: '#f1f5f9',
-    margin: '2px 0',
-    wordBreak: 'break-word',
-  },
-};

@@ -121,7 +121,7 @@ export function DashboardPage() {
   };
 
   return (
-    <div style={styles.dashboardContainer}>
+    <div className="flex w-screen h-screen overflow-hidden bg-zinc-950 text-zinc-100">
       <ConversationSidebar
         conversations={conversations}
         activeId={activeId}
@@ -156,13 +156,3 @@ export function DashboardPage() {
     </div>
   );
 }
-
-const styles = {
-  dashboardContainer: {
-    display: 'flex',
-    width: '100vw',
-    height: '100vh',
-    overflow: 'hidden',
-    backgroundColor: '#0b0f19',
-  },
-};

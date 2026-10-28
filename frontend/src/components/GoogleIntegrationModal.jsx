@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { api } from '../api/client.js';
-import { Mail, CheckCircle2, XCircle, AlertTriangle, ExternalLink, RefreshCw, X, Shield, Lock, Database } from 'lucide-react';
+import { Mail, CheckCircle2, XCircle, AlertTriangle, ExternalLink, RefreshCw, X, Database, Lock } from 'lucide-react';
 
 export function GoogleIntegrationModal({ isOpen, onClose }) {
   const { googleStatus, refreshGoogleStatus } = useAuth();
@@ -104,199 +104,198 @@ export function GoogleIntegrationModal({ isOpen, onClose }) {
   };
 
   return (
-    <div style={styles.overlay} onClick={onClose}>
-      <div style={styles.modal} onClick={(e) => e.stopPropagation()} className="animate-fade-in">
-        <div style={styles.modalHeader}>
-          <div style={styles.headerTitleRow}>
-            <div style={styles.iconBadge}>
-              <Mail size={22} color="#ea4335" />
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-lg max-h-[90vh] flex flex-col bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-800 bg-zinc-900/90">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-zinc-800 border border-zinc-700/60 flex items-center justify-center text-zinc-200">
+              <Mail className="w-5 h-5 text-zinc-200" />
             </div>
             <div>
-              <h2 style={styles.title}>Google Workspace Integration</h2>
-              <p style={styles.subtitle}>Gmail & Google Contacts integration</p>
+              <h2 className="text-base font-semibold text-zinc-100 tracking-tight">Google Integration</h2>
+              <p className="text-xs text-zinc-400">Gmail, Google Contacts & Drive synchronization</p>
             </div>
           </div>
-          <button onClick={onClose} style={styles.closeBtn}>
-            <X size={20} />
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+            title="Close"
+          >
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        {error && (
-          <div style={styles.errorBox}>
-            <AlertTriangle size={18} style={{ flexShrink: 0 }} />
-            <span>{error}</span>
-          </div>
-        )}
+        {/* Scrollable Content */}
+        <div className="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1">
+          {error && (
+            <div className="p-3.5 rounded-xl bg-red-950/40 border border-red-900/60 text-xs text-red-300 flex items-start gap-2.5">
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-red-400" />
+              <span>{error}</span>
+            </div>
+          )}
 
-        <div style={styles.statusBox}>
-          <div style={styles.statusRow}>
-            <span style={styles.statusLabel}>Connection Status:</span>
-            {isConnected ? (
-              <span style={styles.connectedPill}>
-                <CheckCircle2 size={15} style={{ marginRight: 6 }} /> Connected
-              </span>
-            ) : (
-              <span style={styles.disconnectedPill}>
-                <XCircle size={15} style={{ marginRight: 6 }} /> Not Connected
-              </span>
+          {/* Connection Status Box */}
+          <div className="p-4 rounded-xl bg-zinc-950/70 border border-zinc-800 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-zinc-300">Connection Status</span>
+              {isConnected ? (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-950/60 text-emerald-400 border border-emerald-800/60">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Connected
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-zinc-800 text-zinc-400 border border-zinc-700">
+                  <XCircle className="w-3.5 h-3.5" /> Not Connected
+                </span>
+              )}
+            </div>
+
+            {isConnected && (
+              <div className="pt-3 border-t border-zinc-800/80 space-y-2 text-xs">
+                {googleStatus.email && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-zinc-400">Connected Account:</span>
+                    <span className="text-zinc-200 font-medium font-mono text-[11px]">{googleStatus.email}</span>
+                  </div>
+                )}
+                {googleStatus.connectedAt && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-zinc-400">Authorized Since:</span>
+                    <span className="text-zinc-200">
+                      {new Date(googleStatus.connectedAt).toLocaleDateString()} {new Date(googleStatus.connectedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                )}
+                {googleStatus.scopes && (
+                  <div className="space-y-1.5 pt-1">
+                    <span className="text-zinc-400 block">Granted Permissions:</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {googleStatus.scopes.map((s, idx) => (
+                        <span key={idx} className="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-300 font-mono text-[10px]">
+                          {s.split('/').pop()}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
 
+          {/* Persistent Sync Status Card */}
           {isConnected && (
-            <div style={styles.detailsContainer}>
-              {googleStatus.email && (
-                <div style={styles.detailRow}>
-                  <span style={styles.detailKey}>Connected Email:</span>
-                  <span style={styles.detailVal}>{googleStatus.email}</span>
+            <div className="p-4 rounded-xl bg-zinc-950/70 border border-zinc-800 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Database className="w-4 h-4 text-zinc-300" />
+                  <span className="text-xs font-semibold text-zinc-200">Persistent DB & ImageKit Sync</span>
                 </div>
-              )}
-              {googleStatus.connectedAt && (
-                <div style={styles.detailRow}>
-                  <span style={styles.detailKey}>Authorized Since:</span>
-                  <span style={styles.detailVal}>
-                    {new Date(googleStatus.connectedAt).toLocaleDateString()} {new Date(googleStatus.connectedAt).toLocaleTimeString()}
-                  </span>
-                </div>
-              )}
-              {googleStatus.scopes && (
-                <div style={styles.scopesList}>
-                  <span style={styles.detailKey}>Granted Permissions:</span>
-                  <ul style={styles.scopeUl}>
-                    {googleStatus.scopes.map((s, idx) => (
-                      <li key={idx} style={styles.scopeLi}>
-                        <code>{s.split('/').pop()}</code>
-                      </li>
-                    ))}
-                  </ul>
-                  {(!googleStatus.scopes.some(s => s.includes('photospicker') || s.includes('photoslibrary') || s.includes('drive'))) && (
-                    <div style={{ marginTop: '8px', padding: '6px 10px', backgroundColor: 'rgba(234, 179, 8, 0.12)', border: '1px solid rgba(234, 179, 8, 0.3)', borderRadius: '6px', fontSize: '11px', color: '#fde047' }}>
-                      ⚠️ Google Photos permissions not granted on current token. Click <strong>"Re-authorize Google"</strong> below to enable ImageKit photo sync.
-                    </div>
+                <span
+                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${
+                    syncJob?.status === 'completed'
+                      ? 'bg-emerald-950/50 text-emerald-400 border-emerald-800/50'
+                      : syncJob?.status === 'syncing' || syncJob?.status === 'pending'
+                      ? 'bg-blue-950/50 text-blue-400 border-blue-800/50'
+                      : 'bg-zinc-800 text-zinc-300 border-zinc-700'
+                  }`}
+                >
+                  {(syncJob?.status === 'syncing' || syncJob?.status === 'pending') && (
+                    <RefreshCw className="w-3 h-3 animate-spin mr-1" />
                   )}
+                  {syncJob?.status === 'completed'
+                    ? 'Synced to DB'
+                    : syncJob?.status === 'syncing'
+                    ? 'Syncing in background...'
+                    : syncJob?.status === 'pending'
+                    ? 'Pending...'
+                    : 'Ready'}
+                </span>
+              </div>
+
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                {syncJob?.message || 'When connected, your data automatically syncs to MongoDB and ImageKit even if you close the browser.'}
+              </p>
+
+              {/* Counters grid */}
+              <div className="grid grid-cols-4 gap-2 p-3 rounded-lg bg-zinc-900/60 border border-zinc-800/80 text-center">
+                <div className="flex flex-col items-center">
+                  <span className="text-sm font-bold text-zinc-100 font-mono">{syncJob?.contacts?.synced || 0}</span>
+                  <span className="text-[10px] text-zinc-500 font-medium">Contacts</span>
                 </div>
-              )}
+                <div className="flex flex-col items-center">
+                  <span className="text-sm font-bold text-zinc-100 font-mono">{syncJob?.gmail?.synced || 0}</span>
+                  <span className="text-[10px] text-zinc-500 font-medium">Emails</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <span className="text-sm font-bold text-zinc-100 font-mono">{syncJob?.drive?.synced || 0}</span>
+                  <span className="text-[10px] text-zinc-500 font-medium">Drive Files</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <span className="text-sm font-bold text-zinc-100 font-mono">{syncJob?.photos?.synced || 0}</span>
+                  <span className="text-[10px] text-zinc-500 font-medium">Photos (CDN)</span>
+                </div>
+              </div>
+
+              {/* Manual Resync Trigger */}
+              <div className="flex justify-end pt-1">
+                <button
+                  onClick={handleResyncAll}
+                  disabled={resyncing || syncJob?.status === 'syncing'}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-zinc-800 text-zinc-200 border border-zinc-700/80 hover:bg-zinc-750 hover:text-white transition-colors disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-3 h-3 ${resyncing || syncJob?.status === 'syncing' ? 'animate-spin' : ''}`} />
+                  {syncJob?.status === 'syncing' ? 'Syncing in Background…' : 'Resync All Data'}
+                </button>
+              </div>
             </div>
           )}
-        </div>
 
-        {/* Persistent Sync Status Card (MongoDB & ImageKit) */}
-        {isConnected && (
-          <div style={styles.syncJobCard}>
-            <div style={styles.syncJobHeader}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Database size={16} color="#3b82f6" />
-                <span style={styles.syncJobTitle}>Persistent DB & ImageKit Sync</span>
-              </div>
-              <span
-                style={{
-                  ...styles.syncJobStatusBadge,
-                  backgroundColor:
-                    syncJob?.status === 'completed'
-                      ? 'rgba(16, 185, 129, 0.14)'
-                      : syncJob?.status === 'syncing' || syncJob?.status === 'pending'
-                      ? 'rgba(59, 130, 246, 0.14)'
-                      : 'rgba(239, 68, 68, 0.14)',
-                  color:
-                    syncJob?.status === 'completed'
-                      ? '#34d399'
-                      : syncJob?.status === 'syncing' || syncJob?.status === 'pending'
-                      ? '#60a5fa'
-                      : '#fca5a5',
-                }}
-              >
-                {(syncJob?.status === 'syncing' || syncJob?.status === 'pending') && (
-                  <RefreshCw size={11} className="animate-spin" style={{ marginRight: 4 }} />
-                )}
-                {syncJob?.status === 'completed'
-                  ? 'Synced to DB'
-                  : syncJob?.status === 'syncing'
-                  ? 'Syncing in background...'
-                  : syncJob?.status === 'pending'
-                  ? 'Pending...'
-                  : 'Ready'}
-              </span>
+          {/* Info card */}
+          <div className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 space-y-1.5">
+            <div className="flex items-center gap-2 text-xs font-medium text-zinc-300">
+              <Lock className="w-3.5 h-3.5 text-zinc-400" />
+              <span>Full Data Ownership & Persistence</span>
             </div>
-
-            <p style={styles.syncJobMessage}>
-              {syncJob?.message || 'When connected, your data automatically syncs to MongoDB and ImageKit even if you close the browser.'}
+            <p className="text-xs text-zinc-400 leading-relaxed">
+              Google Contacts, Gmail messages, and Drive file records are saved to your private MongoDB collection keyed by your user email. Google Photos are securely duplicated on ImageKit CDN so the agent can read and process them instantly.
             </p>
-
-            {/* Counters grid */}
-            <div style={styles.syncCountersGrid}>
-              <div style={styles.syncCounterItem}>
-                <span style={styles.syncCounterNum}>{syncJob?.contacts?.synced || 0}</span>
-                <span style={styles.syncCounterLabel}>Contacts in DB</span>
-              </div>
-              <div style={styles.syncCounterItem}>
-                <span style={styles.syncCounterNum}>{syncJob?.gmail?.synced || 0}</span>
-                <span style={styles.syncCounterLabel}>Emails in DB</span>
-              </div>
-              <div style={styles.syncCounterItem}>
-                <span style={styles.syncCounterNum}>{syncJob?.drive?.synced || 0}</span>
-                <span style={styles.syncCounterLabel}>Drive Files in DB</span>
-              </div>
-              <div style={styles.syncCounterItem}>
-                <span style={styles.syncCounterNum}>{syncJob?.photos?.synced || 0}</span>
-                <span style={styles.syncCounterLabel}>Photos in ImageKit</span>
-              </div>
-            </div>
-
-            {/* Manual Resync Trigger */}
-            <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'flex-end' }}>
-              <button
-                onClick={handleResyncAll}
-                disabled={resyncing || syncJob?.status === 'syncing'}
-                style={styles.resyncBtn}
-              >
-                <RefreshCw
-                  size={12}
-                  className={resyncing || syncJob?.status === 'syncing' ? 'animate-spin' : ''}
-                  style={{ marginRight: 6 }}
-                />
-                {syncJob?.status === 'syncing' ? 'Syncing in Background…' : 'Resync All Data to DB'}
-              </button>
-            </div>
           </div>
-        )}
-
-        <div style={styles.infoCard}>
-          <div style={styles.infoCardHeader}>
-            <Lock size={16} color="#3b82f6" />
-            <span style={styles.infoTitle}>Universal Sync: Contacts, Gmail, Drive & ImageKit Photos</span>
-          </div>
-          <p style={styles.infoText}>
-            When connected, all your <strong>Google Contacts</strong>, <strong>Gmail</strong>, and <strong>Drive metadata</strong> are securely saved to your MongoDB database with your user email for identification, and your <strong>Google Photos</strong> are automatically stored on ImageKit CDN so your personal AI agent can access and work with them anytime.
-            {isConnected && ' Click "Re-authorize Google" below to grant updated Photos and Gmail Send permissions.'}
-          </p>
         </div>
 
-        <div style={styles.actions}>
+        {/* Actions Footer */}
+        <div className="p-4 border-t border-zinc-800 bg-zinc-900/90 flex items-center justify-end gap-2.5">
           {isConnected ? (
-            <div style={styles.btnGroup}>
+            <div className="flex items-center gap-2.5 w-full">
               <button
                 onClick={handleConnect}
                 disabled={loading}
-                style={styles.reconnectBtn}
+                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium bg-zinc-800 text-zinc-200 border border-zinc-700 hover:bg-zinc-700 hover:text-white transition-colors disabled:opacity-50"
               >
-                <RefreshCw size={16} style={{ marginRight: 8 }} />
+                <RefreshCw className="w-3.5 h-3.5" />
                 Re-authorize Google
               </button>
               <button
                 onClick={handleDisconnect}
                 disabled={loading}
-                style={styles.disconnectBtn}
+                className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-xs font-medium bg-red-950/40 text-red-400 border border-red-900/50 hover:bg-red-900/50 transition-colors disabled:opacity-50"
               >
-                Disconnect Account
+                Disconnect
               </button>
             </div>
           ) : (
             <button
               onClick={handleConnect}
               disabled={loading}
-              style={styles.connectBtn}
+              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold bg-zinc-100 text-zinc-900 hover:bg-white transition-colors shadow-sm disabled:opacity-50"
             >
-              <ExternalLink size={18} style={{ marginRight: 8 }} />
-              {loading ? 'Redirecting to Google...' : 'Connect with Google'}
+              <ExternalLink className="w-4 h-4" />
+              {loading ? 'Redirecting to Google...' : 'Connect Google Account'}
             </button>
           )}
         </div>
@@ -304,296 +303,3 @@ export function GoogleIntegrationModal({ isOpen, onClose }) {
     </div>
   );
 }
-
-const styles = {
-  overlay: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    backdropFilter: 'blur(4px)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
-    padding: '16px',
-  },
-  modal: {
-    backgroundColor: '#121827',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
-    borderRadius: '16px',
-    width: '100%',
-    maxWidth: '520px',
-    padding: '28px',
-    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)',
-  },
-  modalHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: '20px',
-  },
-  headerTitleRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '14px',
-  },
-  iconBadge: {
-    width: '44px',
-    height: '44px',
-    borderRadius: '12px',
-    backgroundColor: 'rgba(234, 67, 53, 0.12)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    border: '1px solid rgba(234, 67, 53, 0.25)',
-  },
-  title: {
-    fontSize: '18px',
-    fontWeight: '700',
-    color: '#f8fafc',
-    margin: 0,
-  },
-  subtitle: {
-    fontSize: '13px',
-    color: '#94a3b8',
-    margin: '3px 0 0 0',
-  },
-  closeBtn: {
-    background: 'none',
-    color: '#94a3b8',
-    padding: '6px',
-    borderRadius: '6px',
-    cursor: 'pointer',
-  },
-  errorBox: {
-    backgroundColor: 'rgba(239, 68, 68, 0.12)',
-    border: '1px solid rgba(239, 68, 68, 0.3)',
-    color: '#fca5a5',
-    padding: '12px',
-    borderRadius: '8px',
-    fontSize: '13px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    marginBottom: '16px',
-  },
-  statusBox: {
-    backgroundColor: '#0b0f19',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
-    borderRadius: '10px',
-    padding: '16px',
-    marginBottom: '16px',
-  },
-  statusRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  statusLabel: {
-    fontSize: '14px',
-    fontWeight: '500',
-    color: '#cbd5e1',
-  },
-  connectedPill: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    padding: '4px 12px',
-    borderRadius: '20px',
-    fontSize: '13px',
-    fontWeight: '600',
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
-    color: '#10b981',
-    border: '1px solid rgba(16, 185, 129, 0.3)',
-  },
-  disconnectedPill: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    padding: '4px 12px',
-    borderRadius: '20px',
-    fontSize: '13px',
-    fontWeight: '600',
-    backgroundColor: 'rgba(239, 68, 68, 0.12)',
-    color: '#ef4444',
-    border: '1px solid rgba(239, 68, 68, 0.25)',
-  },
-  detailsContainer: {
-    marginTop: '12px',
-    paddingTop: '12px',
-    borderTop: '1px solid rgba(255, 255, 255, 0.06)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
-  },
-  detailRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    fontSize: '13px',
-  },
-  detailKey: {
-    color: '#94a3b8',
-  },
-  detailVal: {
-    color: '#f8fafc',
-    fontWeight: '500',
-  },
-  scopesList: {
-    marginTop: '4px',
-  },
-  scopeUl: {
-    listStyle: 'none',
-    paddingLeft: 0,
-    marginTop: '6px',
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '6px',
-  },
-  scopeLi: {
-    fontSize: '11px',
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
-    padding: '3px 8px',
-    borderRadius: '4px',
-    color: '#cbd5e1',
-  },
-  infoCard: {
-    backgroundColor: 'rgba(59, 130, 246, 0.06)',
-    border: '1px solid rgba(59, 130, 246, 0.2)',
-    borderRadius: '10px',
-    padding: '14px',
-    marginBottom: '20px',
-  },
-  syncJobCard: {
-    backgroundColor: '#0b0f19',
-    border: '1px solid rgba(59, 130, 246, 0.25)',
-    borderRadius: '12px',
-    padding: '14px',
-    marginBottom: '16px',
-  },
-  syncJobHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: '6px',
-  },
-  syncJobTitle: {
-    fontSize: '13px',
-    fontWeight: '600',
-    color: '#93c5fd',
-  },
-  syncJobStatusBadge: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    padding: '2px 8px',
-    borderRadius: '12px',
-    fontSize: '11px',
-    fontWeight: '600',
-  },
-  syncJobMessage: {
-    fontSize: '12px',
-    color: '#94a3b8',
-    margin: '4px 0 10px 0',
-    lineHeight: 1.4,
-  },
-  syncCountersGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(4, 1fr)',
-    gap: '8px',
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    padding: '10px 8px',
-    borderRadius: '8px',
-    border: '1px solid rgba(255, 255, 255, 0.05)',
-  },
-  syncCounterItem: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    textAlign: 'center',
-  },
-  syncCounterNum: {
-    fontSize: '15px',
-    fontWeight: '700',
-    color: '#f8fafc',
-  },
-  syncCounterLabel: {
-    fontSize: '10px',
-    color: '#64748b',
-    marginTop: '2px',
-  },
-  resyncBtn: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    padding: '5px 10px',
-    backgroundColor: 'rgba(59, 130, 246, 0.15)',
-    color: '#60a5fa',
-    border: '1px solid rgba(59, 130, 246, 0.3)',
-    borderRadius: '6px',
-    fontSize: '11px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    transition: 'all 0.15s ease',
-  },
-  infoCardHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    marginBottom: '6px',
-  },
-  infoTitle: {
-    fontSize: '13px',
-    fontWeight: '600',
-    color: '#93c5fd',
-  },
-  infoText: {
-    fontSize: '12px',
-    color: '#94a3b8',
-    lineHeight: 1.5,
-    margin: 0,
-  },
-  actions: {
-    display: 'flex',
-    justifyContent: 'flex-end',
-  },
-  btnGroup: {
-    display: 'flex',
-    gap: '10px',
-    width: '100%',
-  },
-  reconnectBtn: {
-    flex: 1,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '10px 16px',
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    color: '#f8fafc',
-    borderRadius: '8px',
-    fontSize: '13px',
-    fontWeight: '500',
-  },
-  disconnectBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '10px 16px',
-    backgroundColor: 'rgba(239, 68, 68, 0.15)',
-    color: '#ef4444',
-    border: '1px solid rgba(239, 68, 68, 0.3)',
-    borderRadius: '8px',
-    fontSize: '13px',
-    fontWeight: '600',
-  },
-  connectBtn: {
-    width: '100%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '12px 20px',
-    backgroundColor: '#3b82f6',
-    color: '#ffffff',
-    borderRadius: '8px',
-    fontSize: '14px',
-    fontWeight: '600',
-  },
-};

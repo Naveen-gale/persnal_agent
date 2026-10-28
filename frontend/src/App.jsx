@@ -3,7 +3,7 @@ import { useAuth } from './context/AuthContext.jsx';
 import { LoginPage } from './pages/LoginPage.jsx';
 import { RegisterPage } from './pages/RegisterPage.jsx';
 import { DashboardPage } from './pages/DashboardPage.jsx';
-import { Bot } from 'lucide-react';
+import { Bot, Loader2 } from 'lucide-react';
 
 export default function App() {
   const { user, loading } = useAuth();
@@ -11,13 +11,18 @@ export default function App() {
 
   if (loading) {
     return (
-      <div style={styles.splash}>
-        <div style={styles.splashCard} className="animate-fade-in">
-          <div style={styles.logoBadge}>
-            <Bot size={36} color="#3b82f6" />
+      <div className="min-h-screen w-screen flex items-center justify-center bg-zinc-950 text-zinc-100">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-200">
+            <Bot size={24} className="text-zinc-200" />
           </div>
-          <h2 style={styles.splashTitle}>Personal AI Agent</h2>
-          <div style={styles.spinner} className="animate-pulse">Connecting to agent runtime...</div>
+          <div className="space-y-1">
+            <h2 className="text-base font-medium tracking-tight text-zinc-200">Personal AI Agent</h2>
+            <div className="flex items-center justify-center gap-2 text-xs text-zinc-500">
+              <Loader2 size={13} className="animate-spin text-zinc-400" />
+              <span>Connecting to secure session...</span>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -32,41 +37,3 @@ export default function App() {
 
   return <DashboardPage />;
 }
-
-const styles = {
-  splash: {
-    height: '100vh',
-    width: '100vw',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#0b0f19',
-  },
-  splashCard: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    textAlign: 'center',
-    gap: '14px',
-  },
-  logoBadge: {
-    width: '64px',
-    height: '64px',
-    borderRadius: '16px',
-    backgroundColor: 'rgba(59, 130, 246, 0.12)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    border: '1px solid rgba(59, 130, 246, 0.25)',
-  },
-  splashTitle: {
-    fontSize: '20px',
-    fontWeight: '700',
-    color: '#f8fafc',
-    margin: 0,
-  },
-  spinner: {
-    fontSize: '13px',
-    color: '#94a3b8',
-  },
-};

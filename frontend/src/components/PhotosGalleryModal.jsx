@@ -20,7 +20,6 @@ import {
   Copy,
   Check,
   Eye,
-  Grid,
 } from 'lucide-react';
 
 export function PhotosGalleryModal({ isOpen, onClose }) {
@@ -47,7 +46,7 @@ export function PhotosGalleryModal({ isOpen, onClose }) {
   const pollTimerRef = useRef(null);
   const liveRefreshCountRef = useRef(0);
 
-  // Fetch photos from backend with optional silent refresh (no full-page spinner)
+  // Fetch photos from backend with optional silent refresh
   const fetchPhotos = useCallback(async (silent = false) => {
     try {
       if (!silent) setLoading(true);
@@ -315,61 +314,70 @@ export function PhotosGalleryModal({ isOpen, onClose }) {
   const activePhoto = selectedPhotoIndex !== null ? photos[selectedPhotoIndex] : null;
 
   return (
-    <div style={styles.overlay} onClick={onClose}>
-      <div style={styles.modal} onClick={(e) => e.stopPropagation()} className="animate-fade-in">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-sm animate-fade-in"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-5xl max-h-[92vh] flex flex-col bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div style={styles.modalHeader}>
-          <div style={styles.headerTitleRow}>
-            <div style={styles.iconBadge}>
-              <ImageIcon size={24} color="#ec4899" />
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 sm:py-5 border-b border-zinc-800 bg-zinc-900/90 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-zinc-800 border border-zinc-700/60 flex items-center justify-center text-zinc-200 shrink-0">
+              <ImageIcon className="w-5 h-5 text-zinc-200" />
             </div>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                <h2 style={styles.title}>Google Photos & ImageKit CDN</h2>
-                <span style={styles.cdnBadge}>
-                  <ShieldCheck size={12} color="#10b981" style={{ marginRight: 4 }} />
-                  ImageKit Active
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-base font-semibold text-zinc-100 tracking-tight">Google Photos & ImageKit CDN</h2>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-950/60 text-emerald-400 border border-emerald-800/60">
+                  <ShieldCheck className="w-3 h-3" /> ImageKit Active
                 </span>
                 {syncing && (
-                  <span style={styles.liveSyncBadge}>
-                    <span className="live-pulse-dot" style={{ marginRight: 6 }} />
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-zinc-800 text-zinc-200 border border-zinc-700">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                     Live Syncing
                   </span>
                 )}
               </div>
-              <p style={styles.subtitle}>All user photos are backed up and served via ImageKit CDN</p>
+              <p className="text-xs text-zinc-400 mt-0.5">Backed up and served securely through private ImageKit CDN</p>
             </div>
           </div>
-          <button onClick={onClose} style={styles.closeBtn} title="Close">
-            <X size={20} />
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+            title="Close"
+          >
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Real-time Progress Bar & Loader */}
         {(syncing || uploadingDirect) && (
-          <div style={styles.progressBarCard}>
-            <div style={styles.progressHeader}>
-              <div style={styles.progressStatusText}>
-                <RefreshCw size={14} className="animate-spin" color="#ec4899" style={{ marginRight: 8 }} />
+          <div className="mx-5 sm:mx-6 mt-4 p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 shrink-0 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2 font-medium text-zinc-200">
+                <RefreshCw className="w-3.5 h-3.5 animate-spin text-zinc-300" />
                 <span>
                   {uploadingDirect
                     ? 'Uploading directly to ImageKit...'
                     : syncProgress?.phase || 'Syncing Photos to ImageKit...'}
                 </span>
               </div>
-              <span style={styles.progressPercent}>{uploadingDirect ? '...' : `${currentPercent}%`}</span>
+              <span className="font-mono font-semibold text-zinc-100">
+                {uploadingDirect ? '...' : `${currentPercent}%`}
+              </span>
             </div>
 
-            <div style={styles.progressBarTrack}>
+            <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
               <div
-                style={{
-                  ...styles.progressBarFill,
-                  width: uploadingDirect ? '85%' : `${currentPercent}%`,
-                }}
+                className="h-full bg-zinc-200 transition-all duration-300 rounded-full"
+                style={{ width: uploadingDirect ? '85%' : `${currentPercent}%` }}
               />
             </div>
 
-            <div style={styles.progressFooterMessage}>
+            <div className="text-[11px] text-zinc-400 truncate">
               {uploadingDirect
                 ? 'Streaming image to ImageKit CDN storage...'
                 : syncProgress?.message || 'Processing and transferring photos...'}
@@ -379,14 +387,17 @@ export function PhotosGalleryModal({ isOpen, onClose }) {
 
         {/* Error message box */}
         {error && (
-          <div style={styles.errorBox}>
-            <AlertCircle size={18} style={{ flexShrink: 0 }} />
-            <div style={{ flex: 1 }}>
-              <span style={{ display: 'block', lineHeight: 1.4 }}>{error}</span>
+          <div className="mx-5 sm:mx-6 mt-4 p-3.5 rounded-xl bg-red-950/40 border border-red-900/60 text-xs text-red-300 flex items-start gap-2.5 shrink-0">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-400" />
+            <div className="flex-1 space-y-2">
+              <span className="block leading-relaxed">{error}</span>
               {isScopeError && (
-                <div style={{ marginTop: '8px' }}>
-                  <button onClick={handleReauthorizeGoogle} style={styles.reauthBtnInline}>
-                    <Lock size={13} style={{ marginRight: 6 }} />
+                <div>
+                  <button
+                    onClick={handleReauthorizeGoogle}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-red-900/60 text-red-100 hover:bg-red-800/80 transition-colors"
+                  >
+                    <Lock className="w-3 h-3" />
                     Re-authorize Google with Photos Scopes
                   </button>
                 </div>
@@ -397,82 +408,78 @@ export function PhotosGalleryModal({ isOpen, onClose }) {
 
         {/* Success message box */}
         {syncMessage && !syncing && (
-          <div style={styles.successBox}>
-            <CheckCircle2 size={16} color="#10b981" style={{ flexShrink: 0 }} />
-            <span style={{ flex: 1 }}>{syncMessage}</span>
+          <div className="mx-5 sm:mx-6 mt-4 p-3 rounded-xl bg-emerald-950/40 border border-emerald-900/60 text-xs text-emerald-300 flex items-center gap-2.5 shrink-0">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span className="flex-1">{syncMessage}</span>
           </div>
         )}
 
         {/* Active Picker Session Banner */}
         {activePickerSession && (
-          <div style={styles.pickerActiveBox}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Sparkles size={16} color="#3b82f6" />
-              <span style={{ fontWeight: 600, fontSize: '13px', color: '#93c5fd' }}>
-                Google Photos Picker Session Active
-              </span>
+          <div className="mx-5 sm:mx-6 mt-4 p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 shrink-0 space-y-2">
+            <div className="flex items-center gap-2 text-xs font-semibold text-zinc-200">
+              <Sparkles className="w-4 h-4 text-zinc-300" />
+              <span>Google Photos Picker Session Active</span>
             </div>
-            <p style={{ margin: '4px 0 10px 0', fontSize: '12px', color: '#cbd5e1' }}>
-              Once you finish choosing your photos in the Google Photos window, click below to sync them into ImageKit.
+            <p className="text-xs text-zinc-400">
+              Once you finish choosing photos in the popup window, click below to import them into ImageKit.
             </p>
             <button
               onClick={handleCompletePickerSync}
               disabled={syncing}
-              style={styles.pickerCompleteBtn}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-medium bg-zinc-100 text-zinc-900 hover:bg-white transition-colors disabled:opacity-50"
             >
-              <ArrowRight size={14} style={{ marginRight: 6 }} />
+              <ArrowRight className="w-3.5 h-3.5" />
               Complete Sync to ImageKit
             </button>
           </div>
         )}
 
         {/* Top Control & Action Bar */}
-        <div style={styles.topActionsRow}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-            <span style={styles.photoCount}>
-              <strong>{photos.length}</strong> {photos.length === 1 ? 'photo' : 'photos'} in ImageKit
+        <div className="flex items-center justify-between gap-3 px-5 sm:px-6 py-3 border-b border-zinc-800 shrink-0 flex-wrap">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <span className="text-xs text-zinc-300">
+              <strong className="font-semibold text-zinc-100 font-mono">{photos.length}</strong> {photos.length === 1 ? 'photo' : 'photos'} in CDN
             </span>
 
             {/* Real-time Reload Button */}
             <button
               onClick={() => fetchPhotos(false)}
               disabled={loading || refreshing}
-              style={styles.realtimeReloadBtn}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-zinc-800 text-zinc-300 border border-zinc-700/80 hover:bg-zinc-750 hover:text-white transition-colors disabled:opacity-50"
               title="Reload photos list from server in real time"
             >
-              <RefreshCw
-                size={13}
-                className={refreshing || loading ? 'animate-spin' : ''}
-                style={{ marginRight: 5 }}
-              />
+              <RefreshCw className={`w-3 h-3 ${refreshing || loading ? 'animate-spin' : ''}`} />
               Reload Photos
             </button>
 
             {lastUpdated && (
-              <span style={styles.lastUpdatedText}>
+              <span className="text-[11px] text-zinc-500 hidden sm:inline">
                 Updated {lastUpdated}
               </span>
             )}
 
             {/* Fit Framing Mode Switch */}
-            <div style={styles.fitModeGroup}>
-              <span style={styles.fitModeLabel}>Fit:</span>
+            <div className="inline-flex items-center bg-zinc-950 border border-zinc-800 rounded-lg p-0.5 text-xs">
+              <span className="text-[10px] text-zinc-500 uppercase px-2 font-mono">Fit</span>
               <button
                 onClick={() => setFitMode('cover')}
-                style={{
-                  ...styles.fitModeBtn,
-                  ...(fitMode === 'cover' ? styles.fitModeBtnActive : {}),
-                }}
+                className={`px-2 py-0.5 rounded text-[11px] transition-colors ${
+                  fitMode === 'cover'
+                    ? 'bg-zinc-800 text-zinc-100 font-medium'
+                    : 'text-zinc-400 hover:text-zinc-200'
+                }`}
                 title="Fill card neatly (Cover)"
               >
                 Fill
               </button>
               <button
                 onClick={() => setFitMode('contain')}
-                style={{
-                  ...styles.fitModeBtn,
-                  ...(fitMode === 'contain' ? styles.fitModeBtnActive : {}),
-                }}
+                className={`px-2 py-0.5 rounded text-[11px] transition-colors ${
+                  fitMode === 'contain'
+                    ? 'bg-zinc-800 text-zinc-100 font-medium'
+                    : 'text-zinc-400 hover:text-zinc-200'
+                }`}
                 title="Show whole uncropped image (Contain)"
               >
                 Fit Whole
@@ -480,84 +487,93 @@ export function PhotosGalleryModal({ isOpen, onClose }) {
             </div>
           </div>
 
-          <div style={styles.actionButtonGroup}>
+          <div className="flex items-center gap-2 flex-wrap">
             {/* Hidden file input for direct upload */}
             <input
               type="file"
               ref={fileInputRef}
               onChange={handleFileInputChange}
               accept="image/*"
-              style={{ display: 'none' }}
+              className="hidden"
             />
 
             <button
               onClick={handleDirectUploadClick}
               disabled={syncing || uploadingDirect}
-              style={styles.uploadBtn}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-zinc-800 text-zinc-200 border border-zinc-700 hover:bg-zinc-750 hover:text-white transition-colors disabled:opacity-50"
               title="Upload photo from your computer directly to ImageKit"
             >
-              <Upload size={14} style={{ marginRight: 6 }} />
-              Upload Photo
+              <Upload className="w-3.5 h-3.5" />
+              Upload Local
             </button>
 
             <button
               onClick={handleOpenPicker}
               disabled={syncing || loading}
-              style={styles.pickerBtn}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-zinc-800 text-zinc-200 border border-zinc-700 hover:bg-zinc-750 hover:text-white transition-colors disabled:opacity-50"
               title="Select photos interactively with Google Photos Picker"
             >
-              <Sparkles size={14} style={{ marginRight: 6 }} />
-              Select from Google Photos
+              <Sparkles className="w-3.5 h-3.5" />
+              Picker Selection
             </button>
 
             <button
               onClick={handleAutoSync}
               disabled={syncing || loading}
-              style={styles.syncBtn}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-zinc-100 text-zinc-900 hover:bg-white transition-colors disabled:opacity-50"
               title="Scan and synchronize all photos to ImageKit"
             >
-              <RefreshCw size={14} className={syncing ? 'animate-spin' : ''} style={{ marginRight: 6 }} />
-              {syncing ? 'Syncing...' : 'Sync from Google'}
+              <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
+              {syncing ? 'Syncing...' : 'Sync All Photos'}
             </button>
           </div>
         </div>
 
         {/* Content Area with Visible Styled Scrollbar */}
-        <div style={styles.scrollContainer} className="custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-5 sm:p-6 custom-scrollbar min-h-[220px]">
           {loading ? (
-            <div style={styles.emptyState}>
-              <RefreshCw size={28} className="animate-spin" color="#ec4899" style={{ marginBottom: 12 }} />
-              <span style={{ color: '#cbd5e1', fontSize: '14px' }}>Loading photos from ImageKit CDN...</span>
+            <div className="py-20 text-center text-xs text-zinc-400 flex flex-col items-center justify-center gap-2.5">
+              <RefreshCw className="w-6 h-6 animate-spin text-zinc-400" />
+              <span>Loading photos from ImageKit CDN...</span>
             </div>
           ) : photos.length === 0 ? (
-            <div style={styles.emptyState}>
-              <div style={styles.emptyIconCircle}>
-                <ImageIcon size={32} color="#ec4899" />
+            <div className="py-16 text-center text-xs text-zinc-400 flex flex-col items-center justify-center max-w-md mx-auto">
+              <div className="w-12 h-12 rounded-2xl bg-zinc-800 border border-zinc-700/60 flex items-center justify-center text-zinc-300 mb-4">
+                <ImageIcon className="w-6 h-6" />
               </div>
-              <p style={{ margin: '0 0 6px 0', fontWeight: 600, color: '#f8fafc', fontSize: '15px' }}>
-                No photos stored in ImageKit yet
+              <h3 className="text-sm font-semibold text-zinc-100 mb-1">No photos stored in ImageKit yet</h3>
+              <p className="text-xs text-zinc-400 mb-6 leading-relaxed">
+                Connect your Google account and click <strong>"Sync All Photos"</strong>, select photos with <strong>"Picker Selection"</strong>, or upload directly from your device.
               </p>
-              <p style={{ margin: '0 0 18px 0', fontSize: '13px', color: '#94a3b8', maxWidth: '440px', lineHeight: 1.5 }}>
-                Connect your Google account and click <strong>"Sync from Google"</strong>, select photos with{' '}
-                <strong>"Select from Google Photos"</strong>, or upload directly from your device.
-              </p>
-              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                <button onClick={handleOpenPicker} disabled={syncing} style={styles.pickerBtn}>
-                  <Sparkles size={14} style={{ marginRight: 6 }} />
-                  Select from Google Photos
+              <div className="flex gap-2.5 flex-wrap justify-center">
+                <button
+                  onClick={handleOpenPicker}
+                  disabled={syncing}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium bg-zinc-800 text-zinc-200 border border-zinc-700 hover:bg-zinc-750 transition-colors"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Select from Google
                 </button>
-                <button onClick={handleAutoSync} disabled={syncing} style={styles.syncBtn}>
-                  <RefreshCw size={14} style={{ marginRight: 6 }} />
-                  Start Photo Sync
+                <button
+                  onClick={handleAutoSync}
+                  disabled={syncing}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-zinc-100 text-zinc-900 hover:bg-white transition-colors"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  Start Full Sync
                 </button>
-                <button onClick={handleDirectUploadClick} disabled={syncing} style={styles.uploadBtn}>
-                  <Upload size={14} style={{ marginRight: 6 }} />
-                  Upload Local Photo
+                <button
+                  onClick={handleDirectUploadClick}
+                  disabled={syncing}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium bg-zinc-800 text-zinc-200 border border-zinc-700 hover:bg-zinc-750 transition-colors"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  Upload Local File
                 </button>
               </div>
             </div>
           ) : (
-            <div style={styles.galleryGrid} className="custom-scrollbar">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5">
               {photos.map((photo, idx) => (
                 <div
                   key={photo._id || photo.imageKitFileId || idx}
@@ -565,31 +581,31 @@ export function PhotosGalleryModal({ isOpen, onClose }) {
                     setSelectedPhotoIndex(idx);
                     setZoomScale(1.0);
                   }}
-                  style={styles.photoCard}
-                  title={`Click to lock and view photo clearly: ${photo.filename}`}
+                  className="group flex flex-col bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden cursor-pointer hover:border-zinc-700 transition-all hover:shadow-lg"
+                  title={`Click to inspect: ${photo.filename}`}
                 >
-                  <div style={styles.photoImgWrapper}>
+                  <div className="relative w-full h-36 bg-zinc-950 overflow-hidden flex items-center justify-center">
                     <img
                       src={photo.thumbnailUrl || photo.imageKitUrl}
                       alt={photo.filename}
-                      style={{
-                        ...styles.photoImg,
-                        objectFit: fitMode,
-                        backgroundColor: fitMode === 'contain' ? '#070b14' : '#1e293b',
-                      }}
+                      className={`w-full h-full transition-transform duration-200 group-hover:scale-105 ${
+                        fitMode === 'contain' ? 'object-contain' : 'object-cover'
+                      }`}
                       loading="lazy"
                     />
-                    <span style={styles.ikTag}>ImageKit</span>
-                    <div style={styles.cardHoverOverlay}>
-                      <Eye size={18} color="#ffffff" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.8))' }} />
-                      <span style={styles.hoverOverlayText}>Lock & View</span>
+                    <span className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-zinc-300 font-mono text-[9px] font-semibold px-1.5 py-0.5 rounded border border-white/10 z-10">
+                      CDN
+                    </span>
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white">
+                      <Eye className="w-5 h-5 drop-shadow" />
+                      <span className="text-[10px] font-medium mt-1">View</span>
                     </div>
                   </div>
-                  <div style={styles.photoFooter}>
-                    <span style={styles.photoName} title={photo.filename}>
+                  <div className="flex items-center justify-between px-3 py-2 text-xs text-zinc-300 bg-zinc-900 border-t border-zinc-800/80">
+                    <span className="truncate max-w-[120px] font-medium" title={photo.filename}>
                       {photo.filename}
                     </span>
-                    <Maximize2 size={12} color="#94a3b8" />
+                    <Maximize2 className="w-3 h-3 text-zinc-500 group-hover:text-zinc-300 transition-colors shrink-0" />
                   </div>
                 </div>
               ))}
@@ -600,160 +616,144 @@ export function PhotosGalleryModal({ isOpen, onClose }) {
         {/* Lightbox / High-Resolution Lock View Overlay */}
         {activePhoto && (
           <div
-            style={styles.lightboxOverlay}
+            className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in"
             onClick={() => {
               setSelectedPhotoIndex(null);
               setZoomScale(1.0);
             }}
           >
             <div
-              style={styles.lightboxModal}
+              className="w-full max-w-4xl max-h-[92vh] flex flex-col bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden"
               onClick={(e) => e.stopPropagation()}
-              className="animate-fade-in"
             >
               {/* Lightbox Header Bar */}
-              <div style={styles.lightboxHeader}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-                  <ImageIcon size={18} color="#ec4899" style={{ flexShrink: 0 }} />
-                  <span style={styles.lightboxTitle} title={activePhoto.filename}>
+              <div className="flex items-center justify-between px-5 py-3.5 border-b border-zinc-800 bg-zinc-900/90 shrink-0">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <ImageIcon className="w-4 h-4 text-zinc-400 shrink-0" />
+                  <span className="text-xs font-semibold text-zinc-100 truncate max-w-xs sm:max-w-md" title={activePhoto.filename}>
                     {activePhoto.filename}
                   </span>
-                  <span style={styles.lightboxCounter}>
+                  <span className="text-[11px] text-zinc-500 shrink-0">
                     ({selectedPhotoIndex + 1} of {photos.length})
                   </span>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  {/* Zoom In */}
+                <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => setZoomScale((prev) => Math.min(prev + 0.25, 3.0))}
-                    style={styles.lightboxIconBtn}
+                    className="p-1.5 rounded-lg bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700/80 transition-colors"
                     title="Zoom in"
                   >
-                    <ZoomIn size={16} />
+                    <ZoomIn className="w-4 h-4" />
                   </button>
-
-                  {/* Zoom Out */}
                   <button
                     onClick={() => setZoomScale((prev) => Math.max(prev - 0.25, 0.75))}
-                    style={styles.lightboxIconBtn}
+                    className="p-1.5 rounded-lg bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700/80 transition-colors"
                     title="Zoom out"
                   >
-                    <ZoomOut size={16} />
+                    <ZoomOut className="w-4 h-4" />
                   </button>
-
-                  {/* Reset Zoom */}
                   <button
                     onClick={() => setZoomScale(1.0)}
-                    style={styles.lightboxResetBtn}
+                    className="px-2 py-1 rounded-lg bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700/80 text-[11px] font-mono transition-colors"
                     title="Reset to 100%"
                   >
                     {Math.round(zoomScale * 100)}%
                   </button>
-
-                  {/* Close Lightbox */}
                   <button
                     onClick={() => {
                       setSelectedPhotoIndex(null);
                       setZoomScale(1.0);
                     }}
-                    style={styles.lightboxCloseBtn}
-                    title="Close preview (Esc)"
+                    className="p-1.5 rounded-lg bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700/80 transition-colors ml-1"
+                    title="Close (Esc)"
                   >
-                    <X size={18} />
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
               </div>
 
-              {/* Lightbox Image Viewport ("Lock Image Clearly") */}
-              <div style={styles.lightboxViewport} className="custom-scrollbar">
-                {/* Previous Navigation Arrow */}
+              {/* Lightbox Image Viewport */}
+              <div className="relative flex-1 min-h-[350px] max-h-[66vh] flex items-center justify-center bg-black/90 overflow-auto p-4 custom-scrollbar">
                 {photos.length > 1 && (
                   <button
                     onClick={() => {
                       setSelectedPhotoIndex((prev) => (prev > 0 ? prev - 1 : photos.length - 1));
                       setZoomScale(1.0);
                     }}
-                    style={styles.navArrowLeft}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-zinc-900/80 border border-zinc-700 text-zinc-200 hover:text-white hover:bg-zinc-800 flex items-center justify-center transition-colors z-20"
                     title="Previous photo (Left arrow)"
                   >
-                    <ChevronLeft size={24} />
+                    <ChevronLeft className="w-5 h-5" />
                   </button>
                 )}
 
-                <div style={styles.imageLockFrame}>
+                <div className="flex items-center justify-center w-full h-full">
                   <img
                     src={activePhoto.imageKitUrl || activePhoto.thumbnailUrl}
                     alt={activePhoto.filename}
-                    style={{
-                      ...styles.lockedImg,
-                      transform: `scale(${zoomScale})`,
-                      transition: 'transform 0.18s ease-out',
-                    }}
+                    className="max-w-full max-h-[60vh] object-contain rounded-lg shadow-2xl transition-transform duration-200"
+                    style={{ transform: `scale(${zoomScale})` }}
                   />
                 </div>
 
-                {/* Next Navigation Arrow */}
                 {photos.length > 1 && (
                   <button
                     onClick={() => {
                       setSelectedPhotoIndex((prev) => (prev < photos.length - 1 ? prev + 1 : 0));
                       setZoomScale(1.0);
                     }}
-                    style={styles.navArrowRight}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-zinc-900/80 border border-zinc-700 text-zinc-200 hover:text-white hover:bg-zinc-800 flex items-center justify-center transition-colors z-20"
                     title="Next photo (Right arrow)"
                   >
-                    <ChevronRight size={24} />
+                    <ChevronRight className="w-5 h-5" />
                   </button>
                 )}
               </div>
 
               {/* Lightbox Footer Bar */}
-              <div style={styles.lightboxFooter}>
-                <div style={styles.lightboxMeta}>
-                  <span style={styles.cdnBadge}>
-                    <ShieldCheck size={12} color="#10b981" style={{ marginRight: 4 }} />
-                    Stored on ImageKit CDN
+              <div className="flex items-center justify-between px-5 py-3 border-t border-zinc-800 bg-zinc-900/90 text-xs shrink-0 flex-wrap gap-2">
+                <div className="flex items-center gap-3 text-zinc-400">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-400">
+                    <ShieldCheck className="w-3.5 h-3.5" /> ImageKit CDN
                   </span>
                   {activePhoto.creationTime && (
-                    <span style={styles.metaText}>
-                      Date: {new Date(activePhoto.creationTime).toLocaleDateString()} {new Date(activePhoto.creationTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    <span className="text-[11px]">
+                      {new Date(activePhoto.creationTime).toLocaleDateString()} {new Date(activePhoto.creationTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   )}
                   {activePhoto.mimeType && (
-                    <span style={styles.metaText}>Type: {activePhoto.mimeType}</span>
+                    <span className="text-[11px] font-mono text-zinc-500">{activePhoto.mimeType}</span>
                   )}
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  {/* Copy Link */}
+                <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleCopyLink(activePhoto.imageKitUrl)}
-                    style={styles.copyLinkBtn}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-zinc-800 text-zinc-200 border border-zinc-700 hover:bg-zinc-750 transition-colors"
                     title="Copy ImageKit CDN URL"
                   >
                     {copiedUrl ? (
                       <>
-                        <Check size={13} color="#10b981" style={{ marginRight: 5 }} />
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
                         Copied!
                       </>
                     ) : (
                       <>
-                        <Copy size={13} style={{ marginRight: 5 }} />
-                        Copy ImageKit Link
+                        <Copy className="w-3.5 h-3.5" />
+                        Copy CDN Link
                       </>
                     )}
                   </button>
 
-                  {/* Open in New Tab */}
                   <a
                     href={activePhoto.imageKitUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={styles.openExternalBtn}
-                    title="Open original high-res image in new tab"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-zinc-100 text-zinc-900 hover:bg-white transition-colors"
+                    title="Open original image in new tab"
                   >
-                    <ExternalLink size={13} style={{ marginRight: 5 }} />
+                    <ExternalLink className="w-3.5 h-3.5" />
                     Open Original
                   </a>
                 </div>
@@ -765,616 +765,3 @@ export function PhotosGalleryModal({ isOpen, onClose }) {
     </div>
   );
 }
-
-const styles = {
-  overlay: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.82)',
-    backdropFilter: 'blur(8px)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1100,
-    padding: '16px',
-  },
-  modal: {
-    backgroundColor: '#0f172a',
-    border: '1px solid rgba(255, 255, 255, 0.12)',
-    borderRadius: '18px',
-    width: '100%',
-    maxWidth: '920px',
-    maxHeight: '90vh',
-    display: 'flex',
-    flexDirection: 'column',
-    padding: '22px 24px',
-    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.85)',
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  modalHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: '14px',
-    flexShrink: 0,
-  },
-  headerTitleRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-  },
-  iconBadge: {
-    width: '46px',
-    height: '46px',
-    borderRadius: '12px',
-    backgroundColor: 'rgba(236, 72, 153, 0.14)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    border: '1px solid rgba(236, 72, 153, 0.3)',
-    flexShrink: 0,
-  },
-  title: {
-    fontSize: '18px',
-    fontWeight: '700',
-    color: '#f8fafc',
-    margin: 0,
-  },
-  subtitle: {
-    fontSize: '13px',
-    color: '#94a3b8',
-    margin: '3px 0 0 0',
-  },
-  cdnBadge: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    padding: '2px 8px',
-    borderRadius: '20px',
-    fontSize: '11px',
-    fontWeight: '600',
-    backgroundColor: 'rgba(16, 185, 129, 0.14)',
-    color: '#34d399',
-    border: '1px solid rgba(16, 185, 129, 0.3)',
-  },
-  liveSyncBadge: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    padding: '2px 8px',
-    borderRadius: '20px',
-    fontSize: '11px',
-    fontWeight: '600',
-    backgroundColor: 'rgba(236, 72, 153, 0.14)',
-    color: '#f472b6',
-    border: '1px solid rgba(236, 72, 153, 0.35)',
-  },
-  closeBtn: {
-    background: 'none',
-    border: 'none',
-    color: '#94a3b8',
-    padding: '6px',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    transition: 'all 0.15s ease',
-  },
-  progressBarCard: {
-    backgroundColor: '#1e293b',
-    border: '1px solid rgba(236, 72, 153, 0.3)',
-    borderRadius: '12px',
-    padding: '12px 16px',
-    marginBottom: '12px',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
-    flexShrink: 0,
-  },
-  progressHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '8px',
-  },
-  progressStatusText: {
-    display: 'flex',
-    alignItems: 'center',
-    fontSize: '13px',
-    fontWeight: '600',
-    color: '#f1f5f9',
-  },
-  progressPercent: {
-    fontSize: '13px',
-    fontWeight: '700',
-    color: '#ec4899',
-  },
-  progressBarTrack: {
-    height: '7px',
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: '999px',
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  progressBarFill: {
-    height: '100%',
-    background: 'linear-gradient(90deg, #ec4899, #a855f7, #3b82f6)',
-    borderRadius: '999px',
-    transition: 'width 0.35s ease',
-  },
-  progressFooterMessage: {
-    marginTop: '6px',
-    fontSize: '12px',
-    color: '#94a3b8',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-  },
-  errorBox: {
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: '10px',
-    padding: '12px 14px',
-    backgroundColor: 'rgba(239, 68, 68, 0.12)',
-    border: '1px solid rgba(239, 68, 68, 0.35)',
-    borderRadius: '10px',
-    color: '#fca5a5',
-    fontSize: '13px',
-    marginBottom: '12px',
-    flexShrink: 0,
-  },
-  reauthBtnInline: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    padding: '6px 12px',
-    backgroundColor: '#ea4335',
-    color: '#ffffff',
-    border: 'none',
-    borderRadius: '6px',
-    fontSize: '12px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    marginTop: '4px',
-  },
-  successBox: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    padding: '10px 14px',
-    backgroundColor: 'rgba(16, 185, 129, 0.12)',
-    border: '1px solid rgba(16, 185, 129, 0.3)',
-    borderRadius: '10px',
-    color: '#34d399',
-    fontSize: '13px',
-    marginBottom: '12px',
-    flexShrink: 0,
-  },
-  pickerActiveBox: {
-    padding: '12px 14px',
-    backgroundColor: 'rgba(59, 130, 246, 0.12)',
-    border: '1px solid rgba(59, 130, 246, 0.35)',
-    borderRadius: '10px',
-    marginBottom: '12px',
-    flexShrink: 0,
-  },
-  pickerCompleteBtn: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    padding: '6px 14px',
-    backgroundColor: '#2563eb',
-    color: '#ffffff',
-    border: 'none',
-    borderRadius: '6px',
-    fontSize: '12px',
-    fontWeight: '600',
-    cursor: 'pointer',
-  },
-  topActionsRow: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingBottom: '12px',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-    marginBottom: '14px',
-    flexWrap: 'wrap',
-    gap: '10px',
-    flexShrink: 0,
-  },
-  photoCount: {
-    fontSize: '13px',
-    color: '#cbd5e1',
-  },
-  realtimeReloadBtn: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    padding: '5px 10px',
-    backgroundColor: 'rgba(236, 72, 153, 0.12)',
-    color: '#f472b6',
-    border: '1px solid rgba(236, 72, 153, 0.3)',
-    borderRadius: '6px',
-    fontSize: '12px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    transition: 'all 0.15s ease',
-  },
-  lastUpdatedText: {
-    fontSize: '11px',
-    color: '#64748b',
-  },
-  fitModeGroup: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    backgroundColor: '#1e293b',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
-    borderRadius: '6px',
-    padding: '2px',
-    gap: '2px',
-  },
-  fitModeLabel: {
-    fontSize: '11px',
-    color: '#94a3b8',
-    padding: '0 6px',
-  },
-  fitModeBtn: {
-    padding: '3px 8px',
-    fontSize: '11px',
-    color: '#94a3b8',
-    backgroundColor: 'transparent',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-  },
-  fitModeBtnActive: {
-    backgroundColor: '#ec4899',
-    color: '#ffffff',
-    fontWeight: '600',
-  },
-  actionButtonGroup: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    flexWrap: 'wrap',
-  },
-  uploadBtn: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    padding: '7px 12px',
-    backgroundColor: '#1e293b',
-    color: '#f1f5f9',
-    border: '1px solid rgba(255, 255, 255, 0.15)',
-    borderRadius: '8px',
-    fontSize: '12px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    transition: 'all 0.15s ease',
-  },
-  pickerBtn: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    padding: '7px 12px',
-    backgroundColor: '#4338ca',
-    color: '#ffffff',
-    border: 'none',
-    borderRadius: '8px',
-    fontSize: '12px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    transition: 'all 0.15s ease',
-  },
-  syncBtn: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    padding: '7px 14px',
-    backgroundColor: '#db2777',
-    color: '#ffffff',
-    border: 'none',
-    borderRadius: '8px',
-    fontSize: '12px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    transition: 'all 0.15s ease',
-  },
-  scrollContainer: {
-    flex: 1,
-    overflowY: 'auto',
-    minHeight: '200px',
-    maxHeight: '56vh',
-    paddingRight: '6px',
-  },
-  emptyState: {
-    padding: '60px 20px',
-    textAlign: 'center',
-    color: '#94a3b8',
-    fontSize: '14px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyIconCircle: {
-    width: '64px',
-    height: '64px',
-    borderRadius: '50%',
-    backgroundColor: 'rgba(236, 72, 153, 0.12)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: '14px',
-    border: '1px solid rgba(236, 72, 153, 0.25)',
-  },
-  galleryGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))',
-    gap: '14px',
-    paddingBottom: '16px',
-  },
-  photoCard: {
-    display: 'flex',
-    flexDirection: 'column',
-    backgroundColor: '#0b1120',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
-    borderRadius: '12px',
-    overflow: 'hidden',
-    cursor: 'pointer',
-    transition: 'transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease',
-  },
-  photoImgWrapper: {
-    position: 'relative',
-    width: '100%',
-    height: '145px',
-    backgroundColor: '#070b14',
-    overflow: 'hidden',
-  },
-  photoImg: {
-    width: '100%',
-    height: '100%',
-    display: 'block',
-    transition: 'transform 0.2s ease',
-  },
-  cardHoverOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.35)',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    opacity: 0,
-    transition: 'opacity 0.15s ease',
-  },
-  hoverOverlayText: {
-    fontSize: '11px',
-    fontWeight: '600',
-    color: '#ffffff',
-    marginTop: '4px',
-    textShadow: '0 1px 3px rgba(0,0,0,0.8)',
-  },
-  ikTag: {
-    position: 'absolute',
-    top: '6px',
-    right: '6px',
-    backgroundColor: 'rgba(0, 0, 0, 0.72)',
-    backdropFilter: 'blur(4px)',
-    color: '#ec4899',
-    fontSize: '9px',
-    fontWeight: '700',
-    padding: '2px 6px',
-    borderRadius: '4px',
-    border: '1px solid rgba(236, 72, 153, 0.4)',
-    zIndex: 2,
-  },
-  photoFooter: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '8px 10px',
-    fontSize: '12px',
-    color: '#cbd5e1',
-    backgroundColor: '#0b1120',
-    borderTop: '1px solid rgba(255, 255, 255, 0.05)',
-  },
-  photoName: {
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-    maxWidth: '130px',
-    fontWeight: '500',
-  },
-
-  // Lightbox / High-Resolution Lock View Overlay Styles
-  lightboxOverlay: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.92)',
-    backdropFilter: 'blur(10px)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1300,
-    padding: '20px',
-  },
-  lightboxModal: {
-    backgroundColor: '#090d16',
-    border: '1px solid rgba(255, 255, 255, 0.15)',
-    borderRadius: '16px',
-    width: '100%',
-    maxWidth: '1000px',
-    maxHeight: '92vh',
-    display: 'flex',
-    flexDirection: 'column',
-    boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.95)',
-    overflow: 'hidden',
-  },
-  lightboxHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '14px 18px',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-    backgroundColor: '#0f172a',
-    flexShrink: 0,
-  },
-  lightboxTitle: {
-    fontSize: '14px',
-    fontWeight: '600',
-    color: '#f8fafc',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-    maxWidth: '380px',
-  },
-  lightboxCounter: {
-    fontSize: '12px',
-    color: '#64748b',
-    flexShrink: 0,
-  },
-  lightboxIconBtn: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '32px',
-    height: '32px',
-    borderRadius: '6px',
-    backgroundColor: '#1e293b',
-    color: '#cbd5e1',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
-    cursor: 'pointer',
-  },
-  lightboxResetBtn: {
-    padding: '4px 8px',
-    fontSize: '11px',
-    fontWeight: '600',
-    borderRadius: '6px',
-    backgroundColor: '#1e293b',
-    color: '#ec4899',
-    border: '1px solid rgba(236, 72, 153, 0.3)',
-    cursor: 'pointer',
-  },
-  lightboxCloseBtn: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '32px',
-    height: '32px',
-    borderRadius: '6px',
-    backgroundColor: 'rgba(239, 68, 68, 0.15)',
-    color: '#fca5a5',
-    border: '1px solid rgba(239, 68, 68, 0.3)',
-    cursor: 'pointer',
-    marginLeft: '6px',
-  },
-  lightboxViewport: {
-    position: 'relative',
-    flex: 1,
-    minHeight: '400px',
-    maxHeight: '68vh',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#030712',
-    overflow: 'auto',
-    padding: '16px',
-  },
-  imageLockFrame: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
-    height: '100%',
-  },
-  lockedImg: {
-    maxWidth: '100%',
-    maxHeight: '62vh',
-    objectFit: 'contain',
-    borderRadius: '8px',
-    boxShadow: '0 10px 30px rgba(0,0,0,0.7)',
-  },
-  navArrowLeft: {
-    position: 'absolute',
-    left: '16px',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    width: '42px',
-    height: '42px',
-    borderRadius: '50%',
-    backgroundColor: 'rgba(15, 23, 42, 0.8)',
-    border: '1px solid rgba(255, 255, 255, 0.15)',
-    color: '#ffffff',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-    backdropFilter: 'blur(4px)',
-    zIndex: 10,
-    transition: 'all 0.15s ease',
-  },
-  navArrowRight: {
-    position: 'absolute',
-    right: '16px',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    width: '42px',
-    height: '42px',
-    borderRadius: '50%',
-    backgroundColor: 'rgba(15, 23, 42, 0.8)',
-    border: '1px solid rgba(255, 255, 255, 0.15)',
-    color: '#ffffff',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-    backdropFilter: 'blur(4px)',
-    zIndex: 10,
-    transition: 'all 0.15s ease',
-  },
-  lightboxFooter: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '12px 18px',
-    borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-    backgroundColor: '#0f172a',
-    flexWrap: 'wrap',
-    gap: '10px',
-    flexShrink: 0,
-  },
-  lightboxMeta: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    flexWrap: 'wrap',
-  },
-  metaText: {
-    fontSize: '12px',
-    color: '#94a3b8',
-  },
-  copyLinkBtn: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    padding: '6px 12px',
-    backgroundColor: '#1e293b',
-    color: '#cbd5e1',
-    border: '1px solid rgba(255, 255, 255, 0.12)',
-    borderRadius: '6px',
-    fontSize: '12px',
-    fontWeight: '500',
-    cursor: 'pointer',
-  },
-  openExternalBtn: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    padding: '6px 12px',
-    backgroundColor: 'rgba(236, 72, 153, 0.15)',
-    color: '#f472b6',
-    border: '1px solid rgba(236, 72, 153, 0.3)',
-    borderRadius: '6px',
-    fontSize: '12px',
-    fontWeight: '600',
-    textDecoration: 'none',
-    cursor: 'pointer',
-  },
-};

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
-import { MessageSquare, Plus, Trash2, Bot, LogOut, CheckCircle2, AlertCircle, Cpu, Mail } from 'lucide-react';
+import { MessageSquare, Plus, Trash2, Bot, LogOut, CheckCircle2, Cpu, Mail, X } from 'lucide-react';
 
 export function ConversationSidebar({
   conversations,
@@ -17,339 +17,163 @@ export function ConversationSidebar({
   const isGoogleConnected = !!(googleStatus && googleStatus.connected);
 
   return (
-    <aside style={{
-      ...styles.sidebar,
-      display: isOpenMobile ? 'flex' : (window.innerWidth <= 768 ? 'none' : 'flex'),
-    }}>
-      {/* Workspace Brand Header */}
-      <div style={styles.header}>
-        <div style={styles.brand}>
-          <div style={styles.brandIcon}>
-            <Bot size={22} color="#3b82f6" />
-          </div>
-          <div style={styles.brandText}>
-            <span style={styles.brandTitle}>Personal AI Agent</span>
-            <span style={styles.brandTag}>Production v1.0</span>
-          </div>
-        </div>
+    <>
+      {/* Mobile Backdrop */}
+      {isOpenMobile && (
+        <div
+          onClick={onCloseMobile}
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 md:hidden transition-opacity"
+        />
+      )}
 
-        <button onClick={onNewConversation} style={styles.newChatBtn}>
-          <Plus size={16} />
-          <span>New Chat</span>
-        </button>
-      </div>
-
-      {/* Conversations List */}
-      <div style={styles.conversationsList}>
-        <div style={styles.sectionHeading}>Recent Conversations</div>
-
-        {conversations.length === 0 ? (
-          <div style={styles.emptyNotice}>
-            <span>No conversations yet. Start a new one!</span>
-          </div>
-        ) : (
-          conversations.map((conv) => {
-            const isActive = conv._id === activeId;
-            return (
-              <div
-                key={conv._id}
-                onClick={() => {
-                  onSelectConversation(conv._id);
-                  if (onCloseMobile) onCloseMobile();
-                }}
-                style={{
-                  ...styles.convItem,
-                  ...(isActive ? styles.convItemActive : {}),
-                }}
-              >
-                <MessageSquare size={16} style={{ flexShrink: 0, opacity: isActive ? 1 : 0.6 }} />
-                <span style={styles.convTitle} title={conv.title || 'Untitled Chat'}>
-                  {conv.title || 'Untitled Chat'}
-                </span>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (window.confirm('Delete this conversation?')) {
-                      onDeleteConversation(conv._id);
-                    }
-                  }}
-                  style={styles.deleteBtn}
-                  title="Delete conversation"
-                >
-                  <Trash2 size={14} />
-                </button>
+      {/* Sidebar Container */}
+      <aside
+        className={`fixed md:static inset-y-0 left-0 z-50 w-72 bg-zinc-950 border-r border-zinc-800/80 flex flex-col h-full shrink-0 transition-transform duration-200 ease-in-out ${
+          isOpenMobile ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        }`}
+      >
+        {/* Workspace Brand Header */}
+        <div className="p-4 border-b border-zinc-800/80 space-y-3 shrink-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-200">
+                <Bot size={17} />
               </div>
-            );
-          })
-        )}
-      </div>
+              <div>
+                <span className="block text-xs font-semibold text-zinc-200 tracking-tight">Personal Agent</span>
+                <span className="block text-[10px] text-zinc-500 font-mono">v1.0 · Private</span>
+              </div>
+            </div>
 
-      {/* Integrations & Controls */}
-      <div style={styles.integrationsPanel}>
-        <button onClick={onOpenGoogleModal} style={styles.toolPillBtn}>
-          <div style={styles.pillLeft}>
-            <Mail size={16} color={isGoogleConnected ? '#10b981' : '#f59e0b'} />
-            <span style={styles.pillLabel}>Google Integration</span>
+            {/* Mobile Close Button */}
+            <button
+              onClick={onCloseMobile}
+              className="p-1 rounded-md text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 md:hidden transition"
+              title="Close sidebar"
+            >
+              <X size={16} />
+            </button>
           </div>
-          {isGoogleConnected ? (
-            <span style={styles.badgeConnected}>
-              <CheckCircle2 size={12} style={{ marginRight: 4 }} />
-              Active
-            </span>
-          ) : (
-            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '500' }}>
-              Optional
-            </span>
-          )}
-        </button>
 
-        <button onClick={onOpenCapabilitiesModal} style={styles.toolPillBtn}>
-          <div style={styles.pillLeft}>
-            <Cpu size={16} color="#3b82f6" />
-            <span style={styles.pillLabel}>Agent Capabilities</span>
-          </div>
-          <span style={styles.badgeModel}>Groq</span>
-        </button>
-      </div>
-
-      {/* User Footer */}
-      <div style={styles.footer}>
-        <div style={styles.userInfo}>
-          <div style={styles.userAvatar}>
-            {(user && user.name ? user.name[0] : 'U').toUpperCase()}
-          </div>
-          <div style={styles.userMeta}>
-            <span style={styles.userName}>{user ? user.name : 'Galen'}</span>
-            <span style={styles.userEmail}>{user ? user.email : ''}</span>
-          </div>
+          <button
+            onClick={() => {
+              onNewConversation();
+              if (onCloseMobile) onCloseMobile();
+            }}
+            className="w-full flex items-center justify-center gap-2 py-2 px-3 text-xs font-medium rounded-lg bg-zinc-100 text-zinc-950 hover:bg-white active:bg-zinc-200 transition shadow-sm"
+          >
+            <Plus size={14} />
+            <span>New Chat</span>
+          </button>
         </div>
-        <button onClick={logout} style={styles.logoutBtn} title="Sign Out">
-          <LogOut size={16} />
-        </button>
-      </div>
-    </aside>
+
+        {/* Conversations List */}
+        <div className="flex-1 overflow-y-auto p-2.5 space-y-1 custom-scrollbar">
+          <div className="text-[10px] font-medium uppercase tracking-wider text-zinc-500 px-2 py-1.5">
+            Conversations
+          </div>
+
+          {conversations.length === 0 ? (
+            <div className="py-8 px-3 text-center text-xs text-zinc-600">
+              No conversations yet. Start a new session above.
+            </div>
+          ) : (
+            conversations.map((conv) => {
+              const isActive = conv._id === activeId;
+              return (
+                <div
+                  key={conv._id}
+                  onClick={() => {
+                    onSelectConversation(conv._id);
+                    if (onCloseMobile) onCloseMobile();
+                  }}
+                  className={`group flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer text-xs transition border ${
+                    isActive
+                      ? 'bg-zinc-900 text-zinc-100 border-zinc-800 font-medium'
+                      : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60 border-transparent'
+                  }`}
+                >
+                  <MessageSquare size={14} className={`shrink-0 ${isActive ? 'text-zinc-300' : 'text-zinc-500'}`} />
+                  <span className="flex-1 truncate" title={conv.title || 'Untitled Session'}>
+                    {conv.title || 'Untitled Session'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (window.confirm('Delete this conversation?')) {
+                        onDeleteConversation(conv._id);
+                      }
+                    }}
+                    className="opacity-0 group-hover:opacity-100 p-1 text-zinc-500 hover:text-rose-400 rounded transition"
+                    title="Delete conversation"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Integrations & Tool Panel */}
+        <div className="p-3 border-t border-zinc-800/80 space-y-2 shrink-0 bg-zinc-950">
+          <button
+            onClick={() => {
+              onOpenGoogleModal();
+              if (onCloseMobile) onCloseMobile();
+            }}
+            className="w-full flex items-center justify-between p-2 rounded-lg bg-zinc-900/60 hover:bg-zinc-900 border border-zinc-800/80 text-xs text-zinc-300 transition"
+          >
+            <div className="flex items-center gap-2">
+              <Mail size={14} className={isGoogleConnected ? 'text-emerald-400' : 'text-zinc-500'} />
+              <span>Google Account</span>
+            </div>
+            {isGoogleConnected ? (
+              <span className="inline-flex items-center text-[10px] text-emerald-400 font-medium">
+                <CheckCircle2 size={11} className="mr-1" />
+                Connected
+              </span>
+            ) : (
+              <span className="text-[10px] text-zinc-500">Not connected</span>
+            )}
+          </button>
+
+          <button
+            onClick={() => {
+              onOpenCapabilitiesModal();
+              if (onCloseMobile) onCloseMobile();
+            }}
+            className="w-full flex items-center justify-between p-2 rounded-lg bg-zinc-900/60 hover:bg-zinc-900 border border-zinc-800/80 text-xs text-zinc-300 transition"
+          >
+            <div className="flex items-center gap-2">
+              <Cpu size={14} className="text-zinc-400" />
+              <span>Agent Tools</span>
+            </div>
+            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">Groq</span>
+          </button>
+        </div>
+
+        {/* User Footer */}
+        <div className="p-3 border-t border-zinc-800/80 flex items-center justify-between bg-zinc-950 shrink-0">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-7 h-7 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-xs font-semibold text-zinc-200 shrink-0">
+              {(user && user.name ? user.name[0] : 'U').toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <span className="block text-xs font-medium text-zinc-200 truncate">{user ? user.name : 'User'}</span>
+              <span className="block text-[10px] text-zinc-500 truncate">{user ? user.email : ''}</span>
+            </div>
+          </div>
+          <button
+            onClick={logout}
+            className="p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded-md transition shrink-0"
+            title="Sign out"
+          >
+            <LogOut size={14} />
+          </button>
+        </div>
+      </aside>
+    </>
   );
 }
-
-const styles = {
-  sidebar: {
-    width: '280px',
-    backgroundColor: '#0f172a',
-    borderRight: '1px solid rgba(255, 255, 255, 0.08)',
-    display: 'flex',
-    flexDirection: 'column',
-    height: '100vh',
-    flexShrink: 0,
-  },
-  header: {
-    padding: '18px 16px',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '14px',
-  },
-  brand: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-  },
-  brandIcon: {
-    width: '36px',
-    height: '36px',
-    borderRadius: '10px',
-    backgroundColor: 'rgba(59, 130, 246, 0.12)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    border: '1px solid rgba(59, 130, 246, 0.25)',
-  },
-  brandText: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  brandTitle: {
-    fontSize: '15px',
-    fontWeight: '700',
-    color: '#f8fafc',
-  },
-  brandTag: {
-    fontSize: '11px',
-    color: '#64748b',
-    fontWeight: '500',
-  },
-  newChatBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '8px',
-    padding: '10px 14px',
-    backgroundColor: '#3b82f6',
-    color: '#ffffff',
-    borderRadius: '8px',
-    fontSize: '13px',
-    fontWeight: '600',
-  },
-  conversationsList: {
-    flex: 1,
-    overflowY: 'auto',
-    padding: '14px 10px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '4px',
-  },
-  sectionHeading: {
-    fontSize: '11px',
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: '0.5px',
-    color: '#64748b',
-    padding: '6px 8px',
-    marginBottom: '4px',
-  },
-  emptyNotice: {
-    padding: '20px 10px',
-    textAlign: 'center',
-    fontSize: '12px',
-    color: '#64748b',
-  },
-  convItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    padding: '10px 12px',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    color: '#94a3b8',
-    fontSize: '13px',
-    position: 'relative',
-    transition: 'all 0.15s ease',
-  },
-  convItemActive: {
-    backgroundColor: 'rgba(59, 130, 246, 0.15)',
-    color: '#f8fafc',
-    border: '1px solid rgba(59, 130, 246, 0.3)',
-    fontWeight: '500',
-  },
-  convTitle: {
-    flex: 1,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  },
-  deleteBtn: {
-    background: 'none',
-    color: '#64748b',
-    padding: '4px',
-    borderRadius: '4px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    opacity: 0.6,
-  },
-  integrationsPanel: {
-    padding: '12px 14px',
-    borderTop: '1px solid rgba(255, 255, 255, 0.06)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
-  },
-  toolPillBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '8px 10px',
-    backgroundColor: '#0b0f19',
-    border: '1px solid rgba(255, 255, 255, 0.06)',
-    borderRadius: '8px',
-    color: '#cbd5e1',
-    fontSize: '12px',
-    width: '100%',
-  },
-  pillLeft: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-  },
-  pillLabel: {
-    fontWeight: '500',
-  },
-  badgeConnected: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    fontSize: '11px',
-    color: '#10b981',
-    fontWeight: '600',
-  },
-  badgeDisconnected: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    fontSize: '11px',
-    color: '#f59e0b',
-    fontWeight: '600',
-  },
-  badgeModel: {
-    fontSize: '11px',
-    backgroundColor: 'rgba(59, 130, 246, 0.15)',
-    color: '#60a5fa',
-    padding: '2px 6px',
-    borderRadius: '4px',
-    fontWeight: '600',
-  },
-  footer: {
-    padding: '14px 16px',
-    borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#0b0f19',
-  },
-  userInfo: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    overflow: 'hidden',
-  },
-  userAvatar: {
-    width: '32px',
-    height: '32px',
-    borderRadius: '50%',
-    backgroundColor: '#3b82f6',
-    color: '#ffffff',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontWeight: '600',
-    fontSize: '13px',
-    flexShrink: 0,
-  },
-  userMeta: {
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'hidden',
-  },
-  userName: {
-    fontSize: '13px',
-    fontWeight: '600',
-    color: '#f8fafc',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  },
-  userEmail: {
-    fontSize: '11px',
-    color: '#64748b',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  },
-  logoutBtn: {
-    background: 'none',
-    color: '#94a3b8',
-    padding: '8px',
-    borderRadius: '6px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-};

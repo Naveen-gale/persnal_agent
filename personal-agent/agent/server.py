@@ -31,7 +31,15 @@ from services.google_auth import (
 
 AGENT_SERVICE_SECRET = os.getenv("AGENT_SERVICE_SECRET", "")
 AGENT_HOST = os.getenv("AGENT_HOST", "0.0.0.0")
-AGENT_PORT = int(os.getenv("PORT", os.getenv("AGENT_PORT", "8000")))
+
+# Prioritize AGENT_PORT for the agent service (defaults to 8000).
+# On Render web services where AGENT_PORT is omitted, fall back to Render's injected PORT.
+if os.getenv("AGENT_PORT"):
+    AGENT_PORT = int(os.getenv("AGENT_PORT"))
+elif os.getenv("PORT") and os.getenv("PORT") != "3000":
+    AGENT_PORT = int(os.getenv("PORT"))
+else:
+    AGENT_PORT = 8000
 
 app = FastAPI(
     title="Personal AI Agent Service",

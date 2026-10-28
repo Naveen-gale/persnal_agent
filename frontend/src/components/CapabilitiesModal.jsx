@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api/client.js';
-import { Cpu, X, CheckCircle, Mail, Users, Shield, Zap, Sparkles, Image } from 'lucide-react';
+import { Cpu, X, CheckCircle, Mail, Users, Shield, Image } from 'lucide-react';
 
 export function CapabilitiesModal({ isOpen, onClose }) {
   const [capabilities, setCapabilities] = useState(null);
@@ -19,293 +19,148 @@ export function CapabilitiesModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
-    <div style={styles.overlay} onClick={onClose}>
-      <div style={styles.modal} onClick={(e) => e.stopPropagation()} className="animate-fade-in">
-        <div style={styles.modalHeader}>
-          <div style={styles.headerTitleRow}>
-            <div style={styles.iconBadge}>
-              <Cpu size={22} color="#3b82f6" />
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-xl max-h-[90vh] flex flex-col bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-800 bg-zinc-900/90">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-zinc-800 border border-zinc-700/60 flex items-center justify-center text-zinc-200">
+              <Cpu className="w-5 h-5 text-zinc-200" />
             </div>
             <div>
-              <h2 style={styles.title}>Agent System Capabilities</h2>
-              <p style={styles.subtitle}>Architecture & Active LangGraph Tools</p>
+              <h2 className="text-base font-semibold text-zinc-100 tracking-tight">Agent Capabilities</h2>
+              <p className="text-xs text-zinc-400">Architecture & Active LangGraph Tools</p>
             </div>
           </div>
-          <button onClick={onClose} style={styles.closeBtn}>
-            <X size={20} />
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+            title="Close"
+          >
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        {loading ? (
-          <div style={styles.loadingBox}>
-            <span className="animate-pulse">Querying Python Agent runtime...</span>
-          </div>
-        ) : capabilities ? (
-          <div style={styles.content}>
-            <div style={styles.metaRow}>
-              <div style={styles.metaCard}>
-                <span style={styles.metaLabel}>LLM Provider</span>
-                <span style={styles.metaValue}>Groq High-Speed API</span>
-              </div>
-              <div style={styles.metaCard}>
-                <span style={styles.metaLabel}>Active Model</span>
-                <span style={styles.metaValue}>{capabilities.model || 'openai/gpt-oss-120b'}</span>
-              </div>
+        {/* Body Content */}
+        <div className="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1">
+          {loading ? (
+            <div className="py-16 text-center text-xs text-zinc-400 flex flex-col items-center justify-center gap-2">
+              <div className="w-5 h-5 border-2 border-zinc-500 border-t-zinc-100 rounded-full animate-spin" />
+              <span>Querying Python Agent runtime...</span>
             </div>
+          ) : capabilities ? (
+            <div className="space-y-4">
+              {/* Meta stats */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3.5 rounded-xl bg-zinc-950/70 border border-zinc-800/80 flex flex-col gap-1">
+                  <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 font-semibold">
+                    LLM Provider
+                  </span>
+                  <span className="text-xs font-semibold text-zinc-200 truncate">
+                    Groq High-Speed API
+                  </span>
+                </div>
+                <div className="p-3.5 rounded-xl bg-zinc-950/70 border border-zinc-800/80 flex flex-col gap-1">
+                  <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 font-semibold">
+                    Active Model
+                  </span>
+                  <span className="text-xs font-mono font-medium text-zinc-200 truncate" title={capabilities.model || 'openai/gpt-oss-120b'}>
+                    {capabilities.model || 'openai/gpt-oss-120b'}
+                  </span>
+                </div>
+              </div>
 
-            <div style={styles.section}>
-              <h3 style={styles.sectionTitle}>
-                <Mail size={16} color="#3b82f6" />
-                Gmail Integration & Email Sending Tools
-              </h3>
-              <div style={styles.toolList}>
-                <div style={styles.toolItem}>
-                  <CheckCircle size={15} color="#10b981" />
-                  <div>
-                    <strong>send_email:</strong> Compose and dispatch real emails directly via Gmail API to any recipient address.
-                  </div>
+              {/* Gmail tools */}
+              <div className="p-4 rounded-xl bg-zinc-950/60 border border-zinc-800/80 space-y-3">
+                <div className="flex items-center gap-2 text-xs font-semibold text-zinc-200">
+                  <Mail className="w-4 h-4 text-zinc-400" />
+                  <span>Gmail & Email Dispatch Tools</span>
                 </div>
-                <div style={styles.toolItem}>
-                  <CheckCircle size={15} color="#10b981" />
-                  <div>
-                    <strong>natural_language_understanding:</strong> Understand casual conversational prompts, typos, and everyday instructions without rigid keyword prefixes.
+                <div className="space-y-2 text-xs text-zinc-400">
+                  <div className="flex items-start gap-2.5">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
+                    <span><strong className="text-zinc-200 font-medium">send_email:</strong> Compose and dispatch real emails directly via Gmail API to any recipient.</span>
                   </div>
-                </div>
-                <div style={styles.toolItem}>
-                  <CheckCircle size={15} color="#10b981" />
-                  <div>
-                    <strong>list_recent_emails:</strong> Fetch latest inbox messages with sender, subject & snippet.
+                  <div className="flex items-start gap-2.5">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
+                    <span><strong className="text-zinc-200 font-medium">natural_language_understanding:</strong> Understand casual conversational prompts without rigid command keywords.</span>
                   </div>
-                </div>
-                <div style={styles.toolItem}>
-                  <CheckCircle size={15} color="#10b981" />
-                  <div>
-                    <strong>search_emails:</strong> Targeted search across sender, subject, date, and query terms.
+                  <div className="flex items-start gap-2.5">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
+                    <span><strong className="text-zinc-200 font-medium">list_recent_emails:</strong> Fetch latest inbox messages with sender, subject, and snippet preview.</span>
                   </div>
-                </div>
-                <div style={styles.toolItem}>
-                  <CheckCircle size={15} color="#10b981" />
-                  <div>
-                    <strong>summarize_emails_with_ai:</strong> Context-aware executive email summarizer.
+                  <div className="flex items-start gap-2.5">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
+                    <span><strong className="text-zinc-200 font-medium">search_emails:</strong> Targeted search across sender, subject, date, and query keywords.</span>
+                  </div>
+                  <div className="flex items-start gap-2.5">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
+                    <span><strong className="text-zinc-200 font-medium">summarize_emails_with_ai:</strong> Context-aware executive email summarizer.</span>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div style={styles.section}>
-              <h3 style={styles.sectionTitle}>
-                <Users size={16} color="#10b981" />
-                Google Contacts Tools
-              </h3>
-              <div style={styles.toolList}>
-                <div style={styles.toolItem}>
-                  <CheckCircle size={15} color="#10b981" />
-                  <div>
-                    <strong>search_contacts:</strong> Find phone numbers, emails, and notes by person name.
-                  </div>
+              {/* Contacts tools */}
+              <div className="p-4 rounded-xl bg-zinc-950/60 border border-zinc-800/80 space-y-3">
+                <div className="flex items-center gap-2 text-xs font-semibold text-zinc-200">
+                  <Users className="w-4 h-4 text-zinc-400" />
+                  <span>Google Contacts Tools</span>
                 </div>
-                <div style={styles.toolItem}>
-                  <CheckCircle size={15} color="#10b981" />
-                  <div>
-                    <strong>list_contacts:</strong> Browse top contacts saved in your Google account.
+                <div className="space-y-2 text-xs text-zinc-400">
+                  <div className="flex items-start gap-2.5">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
+                    <span><strong className="text-zinc-200 font-medium">search_contacts:</strong> Find phone numbers, emails, and address notes by person name.</span>
                   </div>
-                </div>
-                <div style={styles.toolItem}>
-                  <CheckCircle size={15} color="#10b981" />
-                  <div>
-                    <strong>add_contact:</strong> Create and save new contacts directly to your Google account.
+                  <div className="flex items-start gap-2.5">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
+                    <span><strong className="text-zinc-200 font-medium">list_contacts:</strong> Browse synced contacts saved in your MongoDB and Google account.</span>
+                  </div>
+                  <div className="flex items-start gap-2.5">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
+                    <span><strong className="text-zinc-200 font-medium">add_contact:</strong> Create and save new contacts directly to your Google account.</span>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div style={styles.section}>
-              <h3 style={styles.sectionTitle}>
-                <Image size={16} color="#ec4899" />
-                Google Photos & ImageKit CDN
-              </h3>
-              <div style={styles.toolList}>
-                <div style={styles.toolItem}>
-                  <CheckCircle size={15} color="#10b981" />
-                  <div>
-                    <strong>auto_sync_to_imagekit:</strong> When connecting Google, all user photos are automatically uploaded to your private ImageKit CDN.
-                  </div>
+              {/* Photos & ImageKit */}
+              <div className="p-4 rounded-xl bg-zinc-950/60 border border-zinc-800/80 space-y-3">
+                <div className="flex items-center gap-2 text-xs font-semibold text-zinc-200">
+                  <Image className="w-4 h-4 text-zinc-400" />
+                  <span>Google Photos & ImageKit CDN</span>
                 </div>
-                <div style={styles.toolItem}>
-                  <CheckCircle size={15} color="#10b981" />
-                  <div>
-                    <strong>list_photos:</strong> Browse, preview, and share high-speed CDN photo URLs directly with the AI agent.
+                <div className="space-y-2 text-xs text-zinc-400">
+                  <div className="flex items-start gap-2.5">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
+                    <span><strong className="text-zinc-200 font-medium">auto_sync_to_imagekit:</strong> Automatically streams user photos into private ImageKit CDN with MongoDB metadata indexing.</span>
+                  </div>
+                  <div className="flex items-start gap-2.5">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
+                    <span><strong className="text-zinc-200 font-medium">list_photos:</strong> Browse, preview, inspect in high-resolution lightbox, and share CDN URLs with the AI agent.</span>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div style={styles.securityBox}>
-              <Shield size={16} color="#3b82f6" style={{ flexShrink: 0 }} />
-              <span style={styles.securityText}>
-                Thread-safe <code>contextvars</code> dynamic credential injection ensures cloud compatibility without Windows Credential Manager dependencies.
-              </span>
+              {/* Security info */}
+              <div className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 flex items-start gap-3 text-xs text-zinc-400">
+                <Shield className="w-4 h-4 text-zinc-300 shrink-0 mt-0.5" />
+                <span className="leading-relaxed">
+                  Thread-safe <code className="px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-300 font-mono text-[11px]">contextvars</code> credential injection ensures high security and stateless cloud deployments without local OS keychain dependencies.
+                </span>
+              </div>
             </div>
-          </div>
-        ) : (
-          <div style={styles.errorBox}>
-            Could not fetch runtime agent capabilities. Ensure the Python agent service is running on <code>http://127.0.0.1:8000</code>.
-          </div>
-        )}
+          ) : (
+            <div className="p-4 rounded-xl bg-red-950/30 border border-red-900/50 text-xs text-red-300">
+              Could not fetch runtime agent capabilities. Ensure the Python agent service is running on <code className="font-mono text-red-200">http://127.0.0.1:8000</code>.
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 }
-
-const styles = {
-  overlay: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    backdropFilter: 'blur(4px)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
-    padding: '16px',
-  },
-  modal: {
-    backgroundColor: '#121827',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
-    borderRadius: '16px',
-    width: '100%',
-    maxWidth: '560px',
-    padding: '28px',
-    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)',
-    maxHeight: '90vh',
-    overflowY: 'auto',
-  },
-  modalHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: '20px',
-  },
-  headerTitleRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '14px',
-  },
-  iconBadge: {
-    width: '44px',
-    height: '44px',
-    borderRadius: '12px',
-    backgroundColor: 'rgba(59, 130, 246, 0.12)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    border: '1px solid rgba(59, 130, 246, 0.25)',
-  },
-  title: {
-    fontSize: '18px',
-    fontWeight: '700',
-    color: '#f8fafc',
-    margin: 0,
-  },
-  subtitle: {
-    fontSize: '13px',
-    color: '#94a3b8',
-    margin: '3px 0 0 0',
-  },
-  closeBtn: {
-    background: 'none',
-    color: '#94a3b8',
-    padding: '6px',
-    borderRadius: '6px',
-  },
-  loadingBox: {
-    padding: '30px',
-    textAlign: 'center',
-    color: '#94a3b8',
-    fontSize: '14px',
-  },
-  content: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '18px',
-  },
-  metaRow: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '12px',
-  },
-  metaCard: {
-    backgroundColor: '#0b0f19',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
-    borderRadius: '10px',
-    padding: '12px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '4px',
-  },
-  metaLabel: {
-    fontSize: '11px',
-    textTransform: 'uppercase',
-    letterSpacing: '0.5px',
-    color: '#64748b',
-    fontWeight: '600',
-  },
-  metaValue: {
-    fontSize: '13px',
-    fontWeight: '600',
-    color: '#f8fafc',
-  },
-  section: {
-    backgroundColor: '#0b0f19',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
-    borderRadius: '10px',
-    padding: '14px',
-  },
-  sectionTitle: {
-    fontSize: '14px',
-    fontWeight: '600',
-    color: '#f8fafc',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    margin: '0 0 10px 0',
-  },
-  toolList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
-  },
-  toolItem: {
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: '10px',
-    fontSize: '13px',
-    color: '#cbd5e1',
-    lineHeight: 1.4,
-  },
-  securityBox: {
-    backgroundColor: 'rgba(59, 130, 246, 0.08)',
-    border: '1px solid rgba(59, 130, 246, 0.2)',
-    borderRadius: '8px',
-    padding: '12px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    fontSize: '12px',
-    color: '#93c5fd',
-  },
-  securityText: {
-    lineHeight: 1.4,
-  },
-  errorBox: {
-    backgroundColor: 'rgba(239, 68, 68, 0.12)',
-    border: '1px solid rgba(239, 68, 68, 0.3)',
-    color: '#fca5a5',
-    padding: '14px',
-    borderRadius: '8px',
-    fontSize: '13px',
-  },
-};

@@ -1,5 +1,6 @@
 import express from 'express';
 import { User } from '../models/User.js';
+import { isDbConnected, connectDB } from '../config/db.js';
 import {
   clearAuthCookie,
   generateToken,
@@ -11,11 +12,32 @@ import { authLimiter } from '../middleware/rateLimiter.js';
 const router = express.Router();
 
 /**
+ * Helper to ensure database is online before running user operations.
+ */
+async function ensureDbConnection() {
+  if (!isDbConnected()) {
+    try {
+      await connectDB();
+    } catch {
+      // Handled by connection check below
+    }
+  }
+  return isDbConnected();
+}
+
+/**
  * POST /api/v1/auth/register
  * Register a new user account.
  */
 router.post('/register', authLimiter, async (req, res, next) => {
   try {
+    const dbOk = await ensureDbConnection();
+    if (!dbOk) {
+      return res.status(503).json({
+        error: 'Database connection is currently offline. Please ensure MongoDB Atlas has IP 0.0.0.0/0 allowed in Network Access.',
+      });
+    }
+
     const { email, password, name } = req.body;
 
     if (!email || !password || !name) {
@@ -65,6 +87,13 @@ router.post('/register', authLimiter, async (req, res, next) => {
  */
 router.post('/login', authLimiter, async (req, res, next) => {
   try {
+    const dbOk = await ensureDbConnection();
+    if (!dbOk) {
+      return res.status(503).json({
+        error: 'Database connection is currently offline. Please ensure MongoDB Atlas has IP 0.0.0.0/0 allowed in Network Access.',
+      });
+    }
+
     const { email, password } = req.body;
 
     if (!email || !password) {
