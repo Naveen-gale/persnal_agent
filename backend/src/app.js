@@ -60,17 +60,32 @@ app.use(cookieParser());
 // Rate limit general API requests
 app.use('/api/', apiLimiter);
 
-// API Route Mounts
+// API Route Mounts (supports both /api/v1 prefix and root aliases)
 app.use('/api/v1/auth', authRoutes);
+app.use('/auth', authRoutes);
+
 app.use('/api/v1/integrations', integrationRoutes);
+app.use('/integrations', integrationRoutes);
+
 app.use('/api/v1/chat', chatRoutes);
+app.use('/chat', chatRoutes);
 app.use('/api/v1', chatRoutes);
+
 app.use('/api/v1/agent', agentRoutes);
+app.use('/agent', agentRoutes);
 app.use('/api/v1', agentRoutes);
+
 app.use('/api/v1/photos', photoRoutes);
+app.use('/photos', photoRoutes);
+
 app.use('/api/v1/contacts', contactRoutes);
+app.use('/contacts', contactRoutes);
+
 app.use('/api/v1/emails', emailRoutes);
+app.use('/emails', emailRoutes);
+
 app.use('/api/v1/drive', driveRoutes);
+app.use('/drive', driveRoutes);
 
 // Root health & info ping
 app.get('/', (req, res) => {
