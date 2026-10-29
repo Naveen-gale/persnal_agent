@@ -128,6 +128,21 @@ def _verify_secret(x_agent_secret: str | None, request: Request | None = None) -
     )
 
 
+@app.get("/")
+def root() -> dict[str, Any]:
+    """Root endpoint welcoming visitors and providing service status."""
+    return {
+        "status": "ok",
+        "service": "personal-ai-agent",
+        "message": "Personal AI Agent service is running.",
+        "endpoints": {
+            "health": "/health",
+            "capabilities": "/capabilities",
+            "docs": "/docs",
+        },
+    }
+
+
 @app.get("/health")
 @app.get("/api/v1/health")
 def health_check() -> dict[str, str]:

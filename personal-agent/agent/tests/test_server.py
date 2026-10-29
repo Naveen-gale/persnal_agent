@@ -8,6 +8,12 @@ import server
 from server import InvokeRequest
 
 
+def test_root_endpoint() -> None:
+    res = server.root()
+    assert res["status"] == "ok"
+    assert res["service"] == "personal-ai-agent"
+
+
 def test_health_endpoint() -> None:
     res = server.health_check()
     assert res["status"] == "ok"
