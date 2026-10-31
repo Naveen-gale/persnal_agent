@@ -4,6 +4,7 @@ import { isDbConnected } from '../config/db.js';
 
 const router = express.Router();
 
+
 /**
  * GET /api/v1/health
  * Public service health check.

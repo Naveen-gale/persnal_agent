@@ -8,11 +8,24 @@ const __dirname = path.dirname(__filename);
 // Load .env from backend folder or root
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
+// Auto-detect public backend host (Render injects RENDER_EXTERNAL_URL)
+const renderUrl = process.env.RENDER_EXTERNAL_URL
+  || (process.env.RENDER_EXTERNAL_HOSTNAME ? `https://${process.env.RENDER_EXTERNAL_HOSTNAME}` : null);
+
+const backendPublicUrl = process.env.BACKEND_PUBLIC_URL
+  || renderUrl
+  || 'http://localhost:3000';
+
+let resolvedGoogleRedirectUri = process.env.GOOGLE_REDIRECT_URI;
+if (!resolvedGoogleRedirectUri || (renderUrl && resolvedGoogleRedirectUri.includes('localhost'))) {
+  resolvedGoogleRedirectUri = `${backendPublicUrl.replace(/\/+$/, '')}/api/v1/integrations/google/callback`;
+}
+
 export const config = {
   env: process.env.NODE_ENV || 'development',
   port: parseInt(process.env.PORT || '3000', 10),
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
-  backendPublicUrl: process.env.BACKEND_PUBLIC_URL || 'http://localhost:3000',
+  backendPublicUrl,
 
   // MongoDB configuration
   mongodbUri: process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/personal_agent',
@@ -26,7 +39,7 @@ export const config = {
   // Google OAuth credentials
   googleClientId: process.env.GOOGLE_CLIENT_ID || '',
   googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-  googleRedirectUri: process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/api/v1/integrations/google/callback',
+  googleRedirectUri: resolvedGoogleRedirectUri,
 
   // Google token encryption key (32 bytes / 256 bits for AES-256-GCM)
   tokenEncryptionKey: process.env.GOOGLE_TOKEN_ENCRYPTION_KEY || 'dev_encryption_key_change_in_production_32b',
